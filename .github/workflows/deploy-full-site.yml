@@ -18,7 +18,21 @@ jobs:
       - name: Restore lecture 1 compliant site
         shell: bash
         run: |
-          base64 -d .deploy/lecture1-site.b64 | gunzip > index.html
+          cat .deploy/lecture1-part1.b64 \
+              .deploy/lecture1-part2.b64 \
+              .deploy/lecture1-part3.b64 \
+              .deploy/lecture1-part4a.b64 \
+              .deploy/lecture1-part4b.b64 \
+              .deploy/lecture1-part4c.b64 \
+              .deploy/lecture1-part4d.b64 \
+              .deploy/lecture1-part5.b64 \
+            | tr -d '\n' | base64 -d | gunzip > index.html
+
+      - name: Verify site
+        run: |
+          grep -q "purchaseCheckNames" index.html
+          grep -q "اختيار وإضافة حيوان للتسمين" index.html
+          test "$(wc -c < index.html)" -gt 70000
 
       - name: Commit full site
         run: |
