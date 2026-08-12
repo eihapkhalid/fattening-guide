@@ -1,47 +1,16 @@
 name: Deploy full fattening site
 
 on:
-  push:
-    branches: [master]
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
   deploy-full-site:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Restore lecture 1 compliant site
-        shell: bash
-        run: |
-          cat .deploy/lecture1-part1.b64 \
-              .deploy/lecture1-part2.b64 \
-              .deploy/lecture1-part3.b64 \
-              .deploy/lecture1-part4a.b64 \
-              .deploy/lecture1-part4b.b64 \
-              .deploy/lecture1-part4c.b64 \
-              .deploy/lecture1-part4d.b64 \
-              .deploy/lecture1-part5.b64 \
-            | tr -d '\n' | base64 -d | gunzip > index.html
-
-      - name: Verify site
-        run: |
-          grep -q "purchaseCheckNames" index.html
-          grep -q "اختيار وإضافة حيوان للتسمين" index.html
-          test "$(wc -c < index.html)" -gt 70000
-
-      - name: Commit full site
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
-          if git diff --cached --quiet; then
-            echo "No site changes"
-            exit 0
-          fi
-          git commit -m "Apply lecture 1 animal selection checklist"
-          git push
+      - name: Manual hold
+        run: echo "Upload in progress"
