@@ -1,0 +1,56 @@
+name: Audit UI handlers
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit inline event handlers and duplicate definitions
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re, collections
+          s=Path('index.html').read_text(encoding='utf-8')
+          attrs=re.findall(r'\b(?:onclick|onchange|onsubmit|oninput)="([^"]+)"',s)
+          calls=[]
+          for a in attrs:
+              calls += re.findall(r'\b([A-Za-z_$][\w$]*)\s*\(',a)
+          ignored={'if','for','while','switch','alert','setTimeout','clearTimeout','Number','String','Boolean','Math','Date','FormData','Object','Array','parseInt','parseFloat'}
+          defs=set(re.findall(r'\bfunction\s+([A-Za-z_$][\w$]*)\s*\(',s))
+          defs.update(re.findall(r'\bwindow\.([A-Za-z_$][\w$]*)\s*=',s))
+          defs.update(re.findall(r'\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:function\b|\([^)]*\)\s*=>|[A-Za-z_$][\w$]*\s*=>)',s))
+          missing=sorted(set(calls)-defs-ignored)
+          print('INLINE HANDLER ATTRIBUTES:',len(attrs))
+          print('UNIQUE CALLED HANDLERS:',len(set(calls)))
+          print('MISSING HANDLERS:',missing)
+          # Count all function declarations + window reassignments.
+          counts=collections.Counter(re.findall(r'\bfunction\s+([A-Za-z_$][\w$]*)\s*\(',s))
+          counts.update(re.findall(r'\bwindow\.([A-Za-z_$][\w$]*)\s*=',s))
+          dup={k:v for k,v in counts.items() if v>1}
+          print('DUPLICATE/OVERRIDDEN GLOBALS:')
+          for k,v in sorted(dup.items(), key=lambda kv:(-kv[1],kv[0])):
+              print(f'  {k}: {v}')
+          # Tab destinations used by click handlers.
+          tabs=collections.Counter(re.findall(r"setTab\('([^']+)'\)",s))
+          print('SETTAB DESTINATIONS:',dict(sorted(tabs.items())))
+          if missing:
+              raise SystemExit('Missing inline handlers found')
+          PY
+      - name: Check JavaScript syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          blocks=re.findall(r'<script[^>]*>(.*?)</script>',s,re.S)
+          Path('/tmp/site.js').write_text('\n'.join(blocks),encoding='utf-8')
+          PY
+          node --check /tmp/site.js
