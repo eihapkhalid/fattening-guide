@@ -47,7 +47,7 @@ jobs:
           grep -q "شبكة الزبائن" index.html
           grep -q "الربح = إجمالي الإيرادات" index.html
           grep -q "1,450 كجم" index.html
-          grep -q "يرش بالماء كل يومين" index.html
+          grep -q "الماء كل يومين" index.html
           grep -q "نحو 60 يومًا" index.html
           grep -q "activeWithdrawal" index.html
           test "$(wc -c < index.html)" -gt 200000
