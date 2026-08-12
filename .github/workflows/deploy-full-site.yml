@@ -1,0 +1,39 @@
+name: Deploy full fattening site
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+
+jobs:
+  deploy-full-site:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Restore full site from blob
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          curl -sS -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/eihapkhalid/fattening-guide/git/blobs/8a8ac548f0d7ab2260626f6d8244abd70084c583 \
+            | jq -r '.content' | tr -d '\n' | base64 -d > /tmp/payload.b64
+          base64 -d /tmp/payload.b64 | gunzip > index.html
+
+      - name: Commit full site
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then
+            echo "No site changes"
+            exit 0
+          fi
+          git commit -m "Publish full fattening management site"
+          git push
