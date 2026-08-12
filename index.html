@@ -490,4 +490,221 @@ reportsTab = function(p){const e=lecture7Economics(p),all=planAnimals(p.id),five
 render();
 </script>
 
+
+<style>
+/* UX_SIMPLIFICATION_V1 */
+.ux-app .source-note{display:none!important}
+.ux-app.ux-show-guidance .source-note{display:block!important}
+.ux-app .footer-note{display:none}
+.ux-app .content{max-width:1320px;padding-top:22px}
+.ux-app .topbar{height:64px}
+.ux-app .sidebar{width:auto}
+.ux-app .brand{padding-bottom:12px}
+.ux-app .brand p{display:none}
+.ux-app .nav-section{margin-top:10px}
+.ux-app .plan-summary{padding:18px;margin-bottom:12px}
+.ux-app .plan-summary .kpis{grid-template-columns:repeat(3,1fr);margin-top:15px}
+.ux-app .plan-summary .kpi{padding:10px 12px}
+.ux-app .plan-summary .kpi strong{font-size:15px}
+.ux-app .tabs{padding:4px;gap:4px;margin-bottom:14px}
+.ux-app .tab{padding:9px 12px}
+.ux-app .ux-action-strip{display:flex;gap:8px;flex-wrap:wrap}
+.ux-app .ux-action-strip .btn{min-height:42px}
+.ux-app .ux-focus-card{border:1px solid #cfe0d8;background:linear-gradient(135deg,#fff,#f5faf7);border-radius:16px;padding:16px;margin-bottom:14px}
+.ux-app .ux-focus-card h3{margin:0 0 4px;font-size:16px}
+.ux-app .ux-task-list{display:grid;gap:8px;margin-top:12px}
+.ux-app .ux-task{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--border);background:white;border-radius:12px;padding:11px 12px}
+.ux-app .ux-task.danger{border-color:#efcccc;background:#fff7f7}
+.ux-app .ux-task.warn{border-color:#efd8a7;background:#fffaf1}
+.ux-app .ux-task.good{border-color:#cbe2d5;background:#f5fbf7}
+.ux-app .ux-task strong{display:block;font-size:13px}
+.ux-app .ux-task small{display:block;color:var(--muted);margin-top:3px}
+.ux-app .ux-mini-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.ux-app .ux-mini{border:1px solid var(--border);border-radius:13px;background:white;padding:13px}
+.ux-app .ux-mini span{display:block;font-size:10px;color:var(--muted);margin-bottom:6px}
+.ux-app .ux-mini strong{font-size:17px}
+.ux-app .ux-plan-list{display:grid;gap:10px}
+.ux-app .ux-plan-row{border:1px solid var(--border);border-radius:14px;background:white;padding:14px;display:grid;grid-template-columns:1.4fr repeat(3,.55fr) auto;gap:12px;align-items:center}
+.ux-app .ux-plan-row .label{font-size:10px;color:var(--muted);margin-bottom:4px}
+.ux-app .ux-plan-row .value{font-weight:800;font-size:13px}
+.ux-app .ux-more-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.ux-app .ux-more-card{border:1px solid var(--border);background:white;border-radius:14px;padding:15px}
+.ux-app .ux-more-card h3{font-size:14px;margin:0 0 6px}
+.ux-app .ux-more-card p{font-size:11px;color:var(--muted);min-height:34px;margin:0 0 12px}
+.ux-app details.ux-details{margin-top:14px;border:1px solid var(--border);border-radius:14px;background:#fbfdfc;overflow:hidden}
+.ux-app details.ux-details>summary{cursor:pointer;padding:13px 15px;font-weight:700;font-size:12px;color:var(--primary);list-style:none}
+.ux-app details.ux-details>summary::-webkit-details-marker{display:none}
+.ux-app details.ux-details>summary:after{content:'＋';float:left;color:var(--muted)}
+.ux-app details.ux-details[open]>summary:after{content:'−'}
+.ux-app details.ux-details>.ux-details-body{padding:0 12px 12px}
+.ux-app .ux-quiet{font-size:11px;color:var(--muted)}
+.ux-app .ux-icon-btn{border:1px solid var(--border);background:white;border-radius:10px;padding:7px 10px;font-size:12px}
+.ux-app .grid.metrics.ux-compact-metrics{grid-template-columns:repeat(4,minmax(0,1fr))}
+.ux-app .grid.metrics.ux-compact-metrics .metric{padding:14px;box-shadow:none}
+.ux-app .grid.metrics.ux-compact-metrics .metric .value{font-size:19px}
+.ux-app .emergency-rule,.ux-app .emergency-grid{display:none}
+.ux-app.ux-show-guidance .emergency-rule{display:grid}
+.ux-app.ux-show-guidance .emergency-grid{display:grid}
+@media(max-width:1000px){.ux-app .ux-plan-row{grid-template-columns:1.2fr 1fr 1fr auto}.ux-app .ux-plan-row .ux-hide-mid{display:none}.ux-app .ux-more-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:780px){.ux-app .content{padding:14px 11px}.ux-app .plan-summary .row{display:block}.ux-app .plan-summary .actions{margin-top:12px}.ux-app .plan-summary .kpis{grid-template-columns:1fr 1fr 1fr}.ux-app .ux-mini-grid{grid-template-columns:1fr 1fr}.ux-app .ux-more-grid{grid-template-columns:1fr}.ux-app .ux-plan-row{grid-template-columns:1fr auto}.ux-app .ux-plan-row .ux-stat{display:none}.ux-app .grid.metrics.ux-compact-metrics{grid-template-columns:1fr 1fr}.ux-app .top-actions .ux-guidance-label{display:none}}
+</style>
+
+<script>
+/* UX_SIMPLIFICATION_V1 */
+(function(){
+  if(typeof state==='undefined') return;
+  if(typeof state.uxGuidance!=='boolean') state.uxGuidance=false;
+  if(['daily','feeds','treatments','expenses'].includes(state.currentPage)) state.currentPage='plans';
+
+  const uxFullFeedingTab = typeof feedingTab==='function' ? feedingTab : null;
+  const uxFullHealthTab = typeof healthTab==='function' ? healthTab : null;
+  const uxFullSalesTab = typeof salesTab==='function' ? salesTab : null;
+
+  function uxPhase(p){
+    try{return typeof cyclePhase==='function'?cyclePhase(p):{name:'الدورة',key:'active'}}catch(_){return{name:'الدورة',key:'active'}}
+  }
+  function uxDay(p){try{return typeof cycleDay==='function'?cycleDay(p):Math.max(1,daysPassed(p)+1)}catch(_){return 1}}
+  function uxNavKey(tab){return ['shelter','feeds','treatments','expenses','reports','cycle','daily'].includes(tab)?'more':tab}
+  function uxBtnAction(label,fn,kind='') {return `<button class="btn small ${kind}" onclick="${fn}">${label}</button>`}
+  function uxDaysSince(date){if(!date)return 999;const a=new Date(date+'T00:00:00'),b=new Date(today()+'T00:00:00');return Math.max(0,Math.floor((b-a)/86400000))}
+
+  window.toggleUxGuidance=function(){state.uxGuidance=!state.uxGuidance;save();render()}
+  window.openUxActions=function(pid){
+    const hasEmergency=typeof openEmergencyModal==='function';
+    modal(`<div class="modal-head"><div><h3>إجراء سريع</h3><div class="small muted">اختر المهمة فقط؛ التفاصيل ستظهر في الخطوة التالية.</div></div><button class="close" onclick="closeModal()">×</button></div>
+      <div class="ux-more-grid">
+        <div class="ux-more-card"><h3>✎ تسجيل اليوم</h3><p>وزن، حالة وملاحظة للحيوانات.</p><button class="btn primary" onclick="closeModal();openDailyModal('${pid}')">ابدأ</button></div>
+        <div class="ux-more-card"><h3>🐄 إضافة حيوان</h3><p>اختيار وفحص الحيوان ثم إضافته للخطة.</p><button class="btn" onclick="closeModal();openAnimalModal('${pid}')">ابدأ</button></div>
+        <div class="ux-more-card"><h3>🌾 شراء علف</h3><p>إضافة الكمية إلى المخزون.</p><button class="btn" onclick="closeModal();openFeedModal('${pid}')">ابدأ</button></div>
+        <div class="ux-more-card"><h3>✚ تسجيل علاج</h3><p>علاج موثق مع فترة السحب عند الحاجة.</p><button class="btn" onclick="closeModal();openTreatmentModal('${pid}')">ابدأ</button></div>
+        <div class="ux-more-card"><h3>◒ إضافة مصروف</h3><p>أي تكلفة فعلية مرتبطة بالدورة.</p><button class="btn" onclick="closeModal();openExpenseModal('${pid}')">ابدأ</button></div>
+        <div class="ux-more-card"><h3>↗ تسجيل بيع</h3><p>بيع حيوان مع فحص فترة السحب والتسعير.</p><button class="btn" onclick="closeModal();openSaleModal('${pid}')">ابدأ</button></div>
+        ${hasEmergency?`<div class="ux-more-card"><h3>🚨 تدخل سريع</h3><p>نفاخ، حموضة، إسهال أو طفيليات خارجية.</p><button class="btn danger" onclick="closeModal();openEmergencyModal('${pid}')">فتح</button></div>`:''}
+      </div>`)
+  }
+
+  function uxAttention(p){
+    const items=[];
+    const animals=planAnimals(p.id).filter(a=>a.status!=='sold');
+    if(!p.shelter?.ready) items.push({level:'danger',title:'جهّز الزريبة أولًا',sub:'التجهيز غير مكتمل، وهذا يمنع إضافة حيوانات جديدة.',act:`setTab('shelter')`,label:'فتح'});
+    const pending=animals.filter(a=>a.health?.arrivalCompleted===false||a.health?.arrivalCompleted==null);
+    if(pending.length) items.push({level:'warn',title:`استقبال صحي لـ ${pending.length} حيوان`,sub:'وثّق العزل والاستقبال قبل اعتبار الحيوان مستقرًا.',act:`setTab('health')`,label:'متابعة'});
+    if(typeof planEmergencies==='function'){
+      const open=planEmergencies(p.id).filter(e=>e.status!=='resolved');
+      if(open.length) items.push({level:'danger',title:`${open.length} حالة تدخل سريع مفتوحة`,sub:'راجع الحالة وتواصل مع الطبيب عند الحاجة.',act:`setTab('health')`,label:'فتح'});
+    }
+    const wd=animals.filter(a=>typeof activeWithdrawal==='function'&&activeWithdrawal(a.id));
+    if(wd.length) items.push({level:'warn',title:`${wd.length} حيوان داخل فترة سحب`,sub:'لن يسمح النظام ببيعه قبل انتهاء الفترة المسجلة.',act:`setTab('sales')`,label:'مراجعة'});
+    const low=planFeeds(p.id).filter(f=>(Number(f.qtyKg)||0)>0 && ((Number(f.qtyKg)||0)-(Number(f.usedKg)||0))/(Number(f.qtyKg)||1)<=.2);
+    if(low.length) items.push({level:'warn',title:'مخزون علف منخفض',sub:`${low.length} صنف وصل إلى 20% أو أقل من الكمية المشتراة.`,act:`setTab('feeds')`,label:'المخزون'});
+    const due=animals.filter(a=>{const w=a.weights?.at(-1);return w&&uxDaysSince(w.date)>=15});
+    if(due.length) items.push({level:'warn',title:`موعد وزن ${due.length} حيوان`,sub:'مرّ 15 يومًا أو أكثر على آخر وزن مسجل.',act:`openDailyModal('${p.id}')`,label:'تسجيل وزن'});
+    if(uxDay(p)>=60 && typeof marketPlanReady==='function' && !marketPlanReady(p)) items.push({level:'warn',title:'خطة البيع غير مكتملة',sub:'اقتربت مرحلة البيع؛ حدّد السوق والتوقيت والأسعار.',act:`setTab('sales')`,label:'إعداد'});
+    return items.slice(0,4);
+  }
+
+  function uxAttentionHtml(p){
+    const list=uxAttention(p);
+    if(!list.length) return `<div class="ux-task good"><div><strong>لا توجد مهمة حرجة الآن</strong><small>استمر في التسجيل اليومي والمتابعة المعتادة.</small></div><button class="btn small" onclick="openDailyModal('${p.id}')">تسجيل اليوم</button></div>`;
+    return list.map(x=>`<div class="ux-task ${x.level}"><div><strong>${x.title}</strong><small>${x.sub}</small></div><button class="btn small" onclick="${x.act}">${x.label}</button></div>`).join('');
+  }
+
+  window.layout=function(body,title,sub=''){
+    const navClient=[['dashboard','⌂','الرئيسية'],['plans','▣','خططي'],['sales','↗','البيع'],['reports','▥','التقارير']];
+    const navAdmin=[['dashboard','⌂','لوحة الإدارة'],['clients','♟','العملاء'],['plans','▣','الخطط'],['reports','▥','التقارير']];
+    const nav=state.role==='admin'?navAdmin:navClient;
+    return `<div class="app ux-app ${state.uxGuidance?'ux-show-guidance':''}"><div class="sidebar-backdrop" onclick="closeMenu()"></div><aside class="sidebar">
+      <div class="brand"><div class="brand-badge">🐄</div><div><h1>إدارة التسمين</h1><p>متابعة الدورة</p></div></div>
+      <div class="nav-section">الرئيسية</div>${nav.map(n=>`<button class="nav-btn ${state.currentPage===n[0]?'active':''}" onclick="route('${n[0]}')"><span>${n[1]}</span><span>${n[2]}</span></button>`).join('')}
+    </aside><main class="main"><header class="topbar"><div style="display:flex;align-items:center;gap:12px"><button class="mobile-toggle" onclick="toggleMenu()">☰</button><div><div class="topbar-title">${title}</div><div class="topbar-sub">${sub}</div></div></div>
+      <div class="top-actions"><button class="ux-icon-btn" onclick="toggleUxGuidance()" title="${state.uxGuidance?'إخفاء الشروحات':'إظهار الشروحات'}">؟ <span class="ux-guidance-label">${state.uxGuidance?'إخفاء الشرح':'الشرح'}</span></button><button class="ux-icon-btn" onclick="setRole(state.role==='client'?'admin':'client')" title="تبديل وضع العرض">⇄ ${state.role==='client'?'أدمن':'عميل'}</button><div class="avatar">${state.role==='admin'?'A':client().name[0]}</div></div></header><section class="content">${body}</section></main></div>`;
+  }
+
+  function uxPlanRow(p){const s=stats(p),ph=uxPhase(p);return `<div class="ux-plan-row"><div><strong>${p.name}</strong><div class="ux-quiet">اليوم ${uxDay(p)} • ${ph.name} • ${statusBadge(p.status)}</div></div><div class="ux-stat"><div class="label">الحيوانات</div><div class="value">${s.remaining}</div></div><div class="ux-stat"><div class="label">التكلفة</div><div class="value">${fmt(s.total)}</div></div><div class="ux-stat ux-hide-mid"><div class="label">الربح المتوقع</div><div class="value">${fmt(s.profit)}</div></div><button class="btn primary small" onclick="openPlan('${p.id}')">فتح</button></div>`}
+
+  window.dashboard=function(){
+    if(state.role==='admin') return adminDashboard();
+    const ps=state.plans.filter(p=>p.clientId===state.currentClientId),active=ps.filter(p=>p.status==='active'||p.status==='selling');
+    const agg=active.reduce((a,p)=>{const s=stats(p);a.animals+=s.remaining;a.cost+=s.total;a.expected+=s.expected;a.profit+=s.profit;return a},{animals:0,cost:0,expected:0,profit:0});
+    const attentions=active.flatMap(p=>uxAttention(p).map(x=>({...x,pid:p.id,pname:p.name}))).slice(0,4);
+    const attentionHtml=attentions.length?attentions.map(x=>`<div class="ux-task ${x.level}"><div><strong>${x.title}</strong><small>${x.pname} • ${x.sub}</small></div><button class="btn small" onclick="openPlan('${x.pid}');${x.act}">${x.label}</button></div>`).join(''):`<div class="ux-task good"><div><strong>الأمور مستقرة</strong><small>لا توجد مهام حرجة في الخطط النشطة الآن.</small></div></div>`;
+    const body=`<div class="page-head"><div><h2>مرحبًا، ${client().name}</h2><p>ما الذي يحتاج انتباهك اليوم؟</p></div><div class="actions"><button class="btn primary" onclick="openPlanModal()">+ خطة جديدة</button></div></div>
+      <div class="grid metrics ux-compact-metrics"><div class="metric"><div class="label">الحيوانات الحالية</div><div class="value">${agg.animals}</div></div><div class="metric"><div class="label">التكلفة الحالية</div><div class="value">${fmt(agg.cost)}</div></div><div class="metric"><div class="label">البيع المتوقع</div><div class="value">${fmt(agg.expected)}</div></div><div class="metric good"><div class="label">الربح المتوقع</div><div class="value">${fmt(agg.profit)}</div></div></div>
+      <div class="split"><div class="card"><div class="section-title"><div><h3>خططي النشطة</h3><div class="ux-quiet">افتح الخطة لتسجيل العمل اليومي.</div></div><button class="btn small" onclick="route('plans')">كل الخطط</button></div><div class="ux-plan-list">${active.map(uxPlanRow).join('')||empty('لا توجد خطط نشطة')}</div></div><div class="card"><h3>يحتاج انتباهك</h3><div class="ux-task-list">${attentionHtml}</div></div></div>`;
+    return layout(body,'الرئيسية','مهام اليوم أولًا');
+  }
+
+  window.planPage=function(){
+    const p=plan();if(!p)return plansPage();const s=stats(p),ph=uxPhase(p),navKey=uxNavKey(state.planTab||'overview');
+    const tabs=[['overview','اليوم'],['animals','الحيوانات'],['feeding','التغذية'],['health','الصحة'],['sales','البيع'],['more','المزيد']];
+    const head=`<div class="plan-summary"><div class="row"><div><div style="margin-bottom:7px">${statusBadge(p.status)} <span class="badge">اليوم ${uxDay(p)} • ${ph.name}</span></div><h2>${p.name}</h2><p>${state.clients.find(c=>c.id===p.clientId)?.name||''} • البداية ${p.start}</p></div><div class="actions"><button class="btn primary" onclick="openDailyModal('${p.id}')">✎ تسجيل اليوم</button><button class="btn" onclick="openUxActions('${p.id}')">＋ إجراءات</button></div></div><div class="kpis"><div class="kpi"><span>الحيوانات الحالية</span><strong>${s.remaining}</strong></div><div class="kpi"><span>إجمالي التكلفة</span><strong>${fmt(s.total)}</strong></div><div class="kpi"><span>الربح المتوقع</span><strong>${fmt(s.profit)}</strong></div></div></div><div class="tabs">${tabs.map(t=>`<button class="tab ${navKey===t[0]?'active':''}" onclick="setTab('${t[0]}')">${t[1]}</button>`).join('')}</div>`;
+    return layout(head+tabContent(p,s),p.name,'نفّذ المهمة المطلوبة فقط');
+  }
+
+  window.overviewTab=function(p,s){
+    const ph=uxPhase(p),items=uxAttention(p),animals=planAnimals(p.id).filter(a=>a.status!=='sold');
+    const avg=animals.length?animals.reduce((z,a)=>z+(Number(a.weights?.at(-1)?.value)||Number(a.buyWeight)||0),0)/animals.length:0;
+    const gain=animals.reduce((z,a)=>z+((Number(a.weights?.at(-1)?.value)||Number(a.buyWeight)||0)-(Number(a.buyWeight)||0)),0);
+    return `<div class="ux-focus-card"><h3>ماذا تحتاج أن تفعل الآن؟</h3><div class="ux-quiet">بدل عرض كل تفاصيل الدورة، نعرض فقط ما يحتاج إجراء.</div><div class="ux-task-list">${uxAttentionHtml(p)}</div></div>
+      <div class="ux-mini-grid"><div class="ux-mini"><span>مرحلة الدورة</span><strong>${ph.name}</strong><div class="ux-quiet">اليوم ${uxDay(p)}</div></div><div class="ux-mini"><span>متوسط الوزن الحالي</span><strong>${avg?avg.toFixed(1):'—'} كجم</strong></div><div class="ux-mini"><span>إجمالي الزيادة الحالية</span><strong>+${gain.toFixed(1)} كجم</strong></div></div>
+      <div class="card"><div class="section-title"><div><h3>اختصارات اليوم</h3><div class="ux-quiet">أكثر المهام استخدامًا فقط.</div></div></div><div class="ux-action-strip"><button class="btn primary" onclick="openDailyModal('${p.id}')">✎ وزن وحالة</button>${typeof openFeedingLogModal==='function'?`<button class="btn" onclick="openFeedingLogModal('${p.id}')">🌾 تغذية اليوم</button>`:''}${typeof openHealthDailyModal==='function'?`<button class="btn" onclick="openHealthDailyModal('${p.id}')">♡ متابعة صحية</button>`:''}<button class="btn" onclick="openExpenseModal('${p.id}')">◒ مصروف</button></div></div>`;
+  }
+
+  window.moreTab=function(p){
+    const shelter=p.shelter?.ready?'جاهزة':'تحتاج إعداد',feeds=planFeeds(p.id).length,treat=planTreatments(p.id).filter(t=>t.status==='active').length,expenses=planExpenses(p.id).length;
+    const cycleBtn=typeof cycleTab==='function'?`<div class="ux-more-card"><h3>خطة 90–120 يوم</h3><p>المراحل، التقدم وأهداف الدورة.</p><button class="btn small" onclick="setTab('cycle')">فتح</button></div>`:'';
+    return `<div class="card"><div class="section-title"><div><h3>إدارة متقدمة</h3><div class="ux-quiet">هذه الأشياء مهمة، لكنها ليست مهامًا تحتاجها في كل زيارة.</div></div></div><div class="ux-more-grid"><div class="ux-more-card"><h3>الزريبة</h3><p>الحالة: ${shelter}</p><button class="btn small" onclick="setTab('shelter')">فتح</button></div>${cycleBtn}<div class="ux-more-card"><h3>مخزون الأعلاف</h3><p>${feeds} صنف مسجل.</p><button class="btn small" onclick="setTab('feeds')">فتح</button></div><div class="ux-more-card"><h3>العلاجات</h3><p>${treat} علاج مستمر.</p><button class="btn small" onclick="setTab('treatments')">فتح</button></div><div class="ux-more-card"><h3>المصروفات</h3><p>${expenses} حركة مصروف.</p><button class="btn small" onclick="setTab('expenses')">فتح</button></div><div class="ux-more-card"><h3>دراسة الجدوى والتقارير</h3><p>التكلفة والإيراد والربح والأصول.</p><button class="btn small" onclick="setTab('reports')">فتح</button></div></div></div>`;
+  }
+
+  window.tabContent=function(p,s){
+    if(state.planTab==='more')return moreTab(p);
+    if(state.planTab==='shelter')return shelterTab(p);
+    if(state.planTab==='animals')return animalsTab(p);
+    if(state.planTab==='daily')return dailyTab(p);
+    if(state.planTab==='feeding')return feedingTab(p);
+    if(state.planTab==='feeds')return feedsTab(p);
+    if(state.planTab==='health')return healthTab(p);
+    if(state.planTab==='treatments')return treatmentsTab(p);
+    if(state.planTab==='expenses')return expensesTab(p);
+    if(state.planTab==='sales')return salesTab(p);
+    if(state.planTab==='reports')return reportsTab(p);
+    if(state.planTab==='cycle'&&typeof cycleTab==='function')return cycleTab(p);
+    return overviewTab(p,s);
+  }
+
+  if(uxFullFeedingTab){
+    window.feedingTab=function(p){
+      const animals=planAnimals(p.id).filter(a=>a.status!=='sold');
+      const type=typeof feedingAnimalType==='function'?feedingAnimalType(p):null;
+      const totalC=type&&typeof concentrateTarget==='function'&&typeof latestWeightRecord==='function'?animals.reduce((z,a)=>z+Number(concentrateTarget(latestWeightRecord(a).value)||0),0):0;
+      const due=typeof latestWeightRecord==='function'?animals.filter(a=>uxDaysSince(latestWeightRecord(a).date)>=15).length:0;
+      const todayLogs=typeof planFeedingLogs==='function'?planFeedingLogs(p.id).filter(x=>x.date===today()).length:0;
+      return `<div class="grid metrics ux-compact-metrics"><div class="metric hero"><div class="label">مركزات اليوم للقطيع</div><div class="value">${totalC?totalC.toFixed(2):'—'}</div><div class="note">كجم حسب آخر الأوزان</div></div><div class="metric ${due?'warn':'good'}"><div class="label">وزن مستحق</div><div class="value">${due}</div></div><div class="metric"><div class="label">سجلات تغذية اليوم</div><div class="value">${todayLogs}</div></div><div class="metric"><div class="label">أصناف المخزون</div><div class="value">${planFeeds(p.id).length}</div></div></div><div class="card"><div class="section-title"><div><h3>التغذية اليوم</h3><div class="ux-quiet">نفّذ التسجيل أولًا، وارجع للتفاصيل فقط عند الحاجة.</div></div></div><div class="ux-action-strip">${typeof openFeedingLogModal==='function'?`<button class="btn primary" onclick="openFeedingLogModal('${p.id}')">+ تسجيل تغذية اليوم</button>`:''}<button class="btn" onclick="setTab('feeds')">مخزون الأعلاف</button><button class="btn" onclick="openDailyModal('${p.id}')">تسجيل وزن</button></div></div><details class="ux-details"><summary>عرض الخلطات والتدرج والتخزين والإرشادات</summary><div class="ux-details-body">${uxFullFeedingTab(p)}</div></details>`;
+    }
+  }
+
+  if(uxFullHealthTab){
+    window.healthTab=function(p){
+      const animals=planAnimals(p.id).filter(a=>a.status!=='sold');
+      const pending=animals.filter(a=>a.health?.arrivalCompleted===false||a.health?.arrivalCompleted==null).length;
+      const withdraw=animals.filter(a=>typeof activeWithdrawal==='function'&&activeWithdrawal(a.id)).length;
+      const emergencies=typeof planEmergencies==='function'?planEmergencies(p.id).filter(e=>e.status!=='resolved').length:0;
+      return `<div class="grid metrics ux-compact-metrics"><div class="metric ${emergencies?'warn':'good'}"><div class="label">حالات طارئة مفتوحة</div><div class="value">${emergencies}</div></div><div class="metric ${pending?'warn':'good'}"><div class="label">استقبال غير مكتمل</div><div class="value">${pending}</div></div><div class="metric ${withdraw?'warn':'good'}"><div class="label">فترة سحب فعالة</div><div class="value">${withdraw}</div></div><div class="metric"><div class="label">الحيوانات الحالية</div><div class="value">${animals.length}</div></div></div><div class="card"><div class="section-title"><div><h3>الصحة الآن</h3><div class="ux-quiet">اختر الإجراء المطلوب فقط.</div></div></div><div class="ux-action-strip">${typeof openHealthDailyModal==='function'?`<button class="btn primary" onclick="openHealthDailyModal('${p.id}')">♡ متابعة صحية</button>`:''}${typeof openEmergencyModal==='function'?`<button class="btn danger" onclick="openEmergencyModal('${p.id}')">🚨 تدخل سريع</button>`:''}${typeof openArrivalHealthModal==='function'?`<button class="btn" onclick="openArrivalHealthModal('${p.id}')">استقبال وعزل</button>`:''}${typeof openPreventiveEventModal==='function'?`<button class="btn" onclick="openPreventiveEventModal('${p.id}')">وقاية/تحصين</button>`:''}<button class="btn" onclick="setTab('treatments')">العلاجات</button></div></div><details class="ux-details"><summary>عرض السجل الصحي الكامل والإرشادات</summary><div class="ux-details-body">${uxFullHealthTab(p)}</div></details>`;
+    }
+  }
+
+  if(uxFullSalesTab){
+    window.salesTab=function(p){
+      const econ=typeof lecture7Economics==='function'?lecture7Economics(p):null;
+      const animals=planAnimals(p.id),blocked=animals.filter(a=>a.status!=='sold'&&typeof activeWithdrawal==='function'&&activeWithdrawal(a.id));
+      const sold=animals.filter(a=>a.status==='sold').length,marketReady=typeof marketPlanReady==='function'?marketPlanReady(p):!!p.marketPlan;
+      return `<div class="grid metrics ux-compact-metrics"><div class="metric"><div class="label">المباع</div><div class="value">${sold}</div></div><div class="metric"><div class="label">إجمالي التكلفة</div><div class="value">${fmt(econ?.totalCost??stats(p).total)}</div></div><div class="metric"><div class="label">الإيراد المحقق</div><div class="value">${fmt(econ?.totalRevenue??stats(p).actualSales)}</div></div><div class="metric ${(econ?.actualProfit??0)>=0?'good':'warn'}"><div class="label">الربح المحقق</div><div class="value">${fmt(econ?.actualProfit??0)}</div></div></div>${blocked.length?`<div class="ux-task danger" style="margin-bottom:12px"><div><strong>${blocked.length} حيوان لا يمكن بيعه الآن</strong><small>فترة السحب الدوائي ما زالت فعالة.</small></div></div>`:''}<div class="card"><div class="section-title"><div><h3>البيع</h3><div class="ux-quiet">جهّز السوق ثم سجّل الصفقة.</div></div></div><div class="ux-action-strip"><button class="btn ${marketReady?'':'primary'}" onclick="openMarketPlanModal('${p.id}')">${marketReady?'تحديث خطة السوق':'إعداد خطة السوق'}</button><button class="btn primary" onclick="openSaleModal('${p.id}')">+ تسجيل بيع</button>${typeof openOtherRevenueModal==='function'?`<button class="btn" onclick="openOtherRevenueModal('${p.id}')">+ إيراد آخر/سماد</button>`:''}</div></div><details class="ux-details"><summary>عرض التفاوض، القنوات، الزبائن والأصول ودراسة البيع</summary><div class="ux-details-body">${uxFullSalesTab(p)}</div></details>`;
+    }
+  }
+
+  save();
+  render();
+})();
+</script>
+
 </body></html>
