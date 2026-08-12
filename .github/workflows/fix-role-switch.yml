@@ -1,0 +1,44 @@
+name: Fix role switch
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Patch role switch conflict
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          old = s
+          s = s.replace("onclick=\"role('client')\"", "onclick=\"switchRole('client')\"")
+          s = s.replace("onclick=\"role('admin')\"", "onclick=\"switchRole('admin')\"")
+          s = s.replace("function role(r){", "function switchRole(r){")
+          if s == old:
+              print('No role-switch patch needed.')
+          else:
+              p.write_text(s, encoding='utf-8')
+              print('Role switch patched.')
+
+      - name: Commit fix
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Fix client admin role switching"
+          git push
