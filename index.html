@@ -986,4 +986,186 @@ render();
 
 </script>
 
+<style>
+/* USABILITY_V4_HERD_TIMELINE_FEEDING */
+.v4-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}.v4-action{border:1px solid var(--border);border-radius:14px;padding:13px;background:#fff;text-align:right;cursor:pointer}.v4-action.done{opacity:.72;background:#f7faf8}.v4-action strong{display:block;font-size:14px;margin-bottom:4px}.v4-action small{display:block;color:var(--muted);line-height:1.5}.v4-action .v4-state{float:left;font-weight:800}.v4-next{border:1px solid #d8e8df;background:#f6fbf8;border-radius:18px;padding:18px;margin-bottom:14px}.v4-next .eyebrow{font-size:12px;color:var(--muted);margin-bottom:5px}.v4-next h2{margin:0 0 6px;font-size:22px}.v4-next p{margin:0 0 12px;color:var(--muted)}
+.v4-timeline{display:grid;gap:12px}.v4-day{border:1px solid var(--border);border-radius:16px;background:#fff;overflow:hidden}.v4-day>summary{list-style:none;cursor:pointer;padding:14px 16px;font-weight:800;display:flex;justify-content:space-between;align-items:center}.v4-day>summary::-webkit-details-marker{display:none}.v4-day-count{font-size:12px;color:var(--muted);font-weight:600}.v4-events{border-top:1px solid var(--border);padding:4px 12px 10px}.v4-event{display:grid;grid-template-columns:74px 32px 1fr;gap:10px;padding:11px 2px;border-bottom:1px solid #edf0ef;align-items:start}.v4-event:last-child{border-bottom:0}.v4-time{font-size:11px;color:var(--muted);padding-top:3px;white-space:normal;line-height:1.4}.v4-evicon{width:30px;height:30px;border-radius:9px;background:#f1f5f3;display:grid;place-items:center}.v4-event h4{margin:0 0 3px;font-size:14px}.v4-event p{margin:0;color:var(--muted);font-size:12px;line-height:1.6}.v4-event details{margin-top:6px}.v4-event details summary{cursor:pointer;color:var(--primary);font-size:12px}.v4-event-details{font-size:12px;color:var(--muted);padding:6px 0;line-height:1.7}.v4-scope{display:inline-block;font-size:11px;border:1px solid var(--border);border-radius:999px;padding:1px 7px;margin-inline-start:5px;color:var(--muted)}
+.v4-animal-feed{display:grid;grid-template-columns:minmax(150px,1.2fr) minmax(130px,1fr) minmax(130px,1fr);gap:10px;align-items:end;padding:11px;border:1px solid var(--border);border-radius:13px;margin-bottom:9px}.v4-animal-feed .who strong{display:block}.v4-animal-feed .who small{display:block;color:var(--muted);line-height:1.4}.v4-mini-recipe{display:grid;grid-template-columns:repeat(5,minmax(90px,1fr));gap:7px;margin-top:9px}.v4-mini-recipe div{background:#f7f9f8;border:1px solid var(--border);border-radius:10px;padding:8px;font-size:12px}.v4-mini-recipe strong{display:block;margin-bottom:2px}.v4-feed-note{border:1px solid #eadfbf;background:#fffcf1;border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.65;margin:10px 0}.v4-feed-source{font-size:11px;color:var(--muted);margin-top:3px}.v4-simple-feed-list{display:grid;gap:8px}.v4-simple-feed-row{display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid var(--border);padding:8px 0}.v4-simple-feed-row:last-child{border-bottom:0}.v4-simple-feed-row small{color:var(--muted);display:block}.v4-done-chip{font-size:12px;border-radius:999px;padding:4px 8px;background:#edf7f0;color:#21633a}.v4-advanced{margin-top:12px}.v4-advanced>summary{cursor:pointer;color:var(--muted);font-size:12px}
+@media(max-width:900px){.v4-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.v4-animal-feed{grid-template-columns:1fr 1fr}.v4-animal-feed .who{grid-column:1/-1}.v4-mini-recipe{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.v4-actions{grid-template-columns:1fr}.v4-event{grid-template-columns:58px 28px 1fr}.v4-animal-feed{grid-template-columns:1fr}.v4-animal-feed .who{grid-column:auto}.v4-mini-recipe{grid-template-columns:1fr 1fr}.v4-next h2{font-size:19px}}
+</style>
+<script>
+/* USABILITY_V4_HERD_TIMELINE_FEEDING */
+(()=>{
+  if(typeof state==='undefined') return;
+  state.herdTimelineVersion=4;
+  state.plans.forEach(p=>{p.feeding=p.feeding||{};if(typeof p.feeding.taperComplete!=='boolean')p.feeding.taperComplete=false;if(!p.feeding.cakeCode)p.feeding.cakeCode='peanut_cake';});
+
+  const oldTabContent=window.tabContent;
+  const oldFeedingTab=window.feedingTab;
+  const nowIso=()=>new Date().toISOString();
+  const batchId=()=>uid('evb');
+  const activeAnimals=p=>planAnimals(p.id).filter(a=>a.status!=='sold');
+  const latest=a=>typeof latestWeightRecord==='function'?latestWeightRecord(a):{value:(a.weights?.at(-1)?.value||a.buyWeight),date:(a.weights?.at(-1)?.date||a.buyDate||'')};
+  const rem=f=>(Number(f.qtyKg)||0)-(Number(f.usedKg)||0);
+  const localTime=iso=>{if(!iso)return'وقت غير مسجل';try{return new Date(iso).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'})}catch(_){return'وقت غير مسجل'}};
+  const tag=aid=>state.animals.find(a=>a.id===aid)?.tag||aid||'-';
+  const esc=x=>String(x??'').replace(/[&<>\"]/g,c=>c==='&'?'&amp;':c==='<'?'&lt;':c==='>'?'&gt;':'&quot;');
+
+  function stampNew(name,keys){
+    const fn=window[name]; if(typeof fn!=='function'||fn.__v4stamp)return;
+    const wrapped=function(...args){
+      const before=Object.fromEntries(keys.map(k=>[k,(state[k]||[]).length]));
+      const b=batchId(),at=nowIso(),out=fn.apply(this,args);let changed=false;
+      keys.forEach(k=>{const arr=state[k]||[];arr.slice(before[k]).forEach(x=>{if(!x.createdAt){x.createdAt=at;changed=true}if(!x.eventBatchId){x.eventBatchId=b;changed=true}})});
+      if(changed)save();return out;
+    };wrapped.__v4stamp=true;window[name]=wrapped;
+  }
+  [
+    ['createDaily',['daily']],['saveEasyWeights',['daily']],['ezAllHealthy',['healthLogs']],
+    ['createHealthDaily',['healthLogs']],['saveHealthDaily',['healthLogs']],['saveArrivalHealth',['healthEvents']],
+    ['createArrivalHealth',['healthEvents']],['savePreventiveEvent',['healthEvents']],['createPreventiveEvent',['healthEvents']],
+    ['createTreatment',['treatments']],['createExpense',['expenses']],['createSale',['sales']],
+    ['saveEmergency',['emergencies']],['createEmergency',['emergencies']],['createFeedChecklistV3',['feeds']],
+    ['createOtherRevenue',['otherRevenues']],['createAnimal',['animals']]
+  ].forEach(x=>stampNew(x[0],x[1]));
+
+  window.quickCleanShelter=function(pid){
+    const exists=state.daily.some(d=>d.planId===pid&&d.date===today()&&d.shelterCleaned===true);
+    if(exists){alert('نظافة الزريبة مسجلة اليوم بالفعل.');return}
+    state.daily.push({id:uid('d'),planId:pid,date:today(),note:'نظافة الزريبة',shelterCleaned:true,entries:[],createdAt:nowIso(),eventBatchId:batchId()});
+    save();render();
+  };
+
+  function healthDone(p){const ids=new Set(planHealthLogs(p.id).filter(x=>x.date===today()).map(x=>x.animalId));const a=activeAnimals(p);return a.length>0&&a.every(x=>ids.has(x.id))}
+  function cleanDone(p){return state.daily.some(d=>d.planId===p.id&&d.date===today()&&d.shelterCleaned===true)}
+  function feedDone(p){return planFeedingLogs(p.id).some(x=>x.date===today())}
+  function dueWeights(p){return activeAnimals(p).filter(a=>{const w=a.weights?.at(-1);if(!w)return true;const d=Math.floor((new Date(today()+'T00:00:00')-new Date(w.date+'T00:00:00'))/86400000);return d>=15})}
+  function stockReady(p){const fs=planFeeds(p.id);return fs.some(f=>f.category==='roughage'&&rem(f)>0)&&fs.some(f=>(f.category==='concentrate'||['sorghum','peanut_cake','sesame_cake','wheat_bran'].includes(f.catalogCode))&&rem(f)>0)}
+  window.ezNext=function(p){
+    const animals=activeAnimals(p),em=typeof planEmergencies==='function'?planEmergencies(p.id).filter(e=>e.status!=='resolved'):[],pending=animals.filter(a=>a.health?.arrivalCompleted!==true),due=dueWeights(p);
+    if(em.length)return{key:'emergency',title:'راجع الحالة الطارئة',sub:`هناك ${em.length} حالة مفتوحة.`,button:'فتح الصحة'};
+    if(!p.shelter?.ready)return{key:'shelter',title:'جهّز الزريبة',sub:'ابدأ بهذه الخطوة فقط.',button:'تجهيز الزريبة'};
+    if(!animals.length)return{key:'animal',title:'أضف أول حيوان',sub:'بعد فحص الشراء سجّل الحيوان.',button:'إضافة حيوان'};
+    if(pending.length)return{key:'arrival',title:'أكمل استقبال الحيوان',sub:`${pending.length} حيوان لم يكتمل استقباله الصحي.`,button:'تسجيل الاستقبال'};
+    if(!stockReady(p))return{key:'stock',title:'أدخل الأعلاف الموجودة',sub:'أضف مكونات العلف والمالئ إلى المخزون.',button:'إضافة أعلاف'};
+    if(!feedDone(p))return{key:'feed',title:'سجّل تغذية اليوم',sub:'ستظهر كمية كل حيوان والخلطة في شاشة واحدة.',button:'تسجيل التغذية'};
+    if(!cleanDone(p))return{key:'clean',title:'هل نُظفت الزريبة اليوم؟',sub:'إذا تم التنظيف سجله بضغطة واحدة.',button:'تم تنظيف الزريبة'};
+    if(!healthDone(p))return{key:'health',title:'افحص صحة القطيع',sub:'إذا كان الجميع طبيعيًا سجّلها بضغطة واحدة.',button:'فحص الصحة'};
+    if(due.length)return{key:'weight',title:`حان وزن ${due.length} حيوان`,sub:'أدخل الوزن الجديد فقط.',button:'تسجيل الوزن'};
+    if((typeof ezDay==='function'?ezDay(p):cycleDay(p))>=60&&typeof marketPlanReady==='function'&&!marketPlanReady(p))return{key:'market',title:'جهّز خطة البيع',sub:'حدد السوق والتوقيت قبل يوم البيع.',button:'تجهيز البيع'};
+    return{key:'done',title:'انتهت مهام اليوم',sub:'لا يوجد إجراء مطلوب الآن.',button:'تسجيل حدث آخر'};
+  };
+  window.ezRunNext=function(pid){const p=plan(pid),n=ezNext(p);if(n.key==='clean'){quickCleanShelter(pid);return}if(n.key==='emergency'){setTab('health');return}if(n.key==='shelter'){setTab('shelter');return}if(n.key==='animal'){openAnimalModal(pid);return}if(n.key==='arrival'){openArrivalHealthModal(pid);return}if(n.key==='stock'){openFeedModal(pid);return}if(n.key==='feed'){openFeedingLogModal(pid);return}if(n.key==='health'){openHealthDailyModal(pid);return}if(n.key==='weight'){openEasyWeightModal(pid);return}if(n.key==='market'){setTab('sales');return}openEasyActions(pid)};
+
+  function courseStep(a,p){
+    const d=Math.max(1,typeof ezDay==='function'?ezDay(p):cycleDay(p)),w=Number(latest(a).value)||Number(a.buyWeight)||0,target=concentrateTarget(w);
+    if(a.animalType==='calf'&&Number(a.buyWeight)===200){if(d<=3)return{qty:2,label:'تدرج المحاضرة: الأيام 1–3'};if(d<=7)return{qty:3,label:'تدرج المحاضرة: الأيام 4–7'};if(d<=10)return{qty:4,label:'تدرج المحاضرة: الأيام 8–10'};return{qty:target,label:'الكمية الكاملة: 3% من آخر وزن'}}
+    if(a.animalType==='sheep'&&Number(a.buyWeight)===20){if(d<=3)return{qty:.2,label:'تدرج المحاضرة: الأيام 1–3'};if(d<=7)return{qty:.3,label:'تدرج المحاضرة: الأيام 4–7'};if(d<=10)return{qty:.5,label:'تدرج المحاضرة: الأيام 8–10'};return{qty:target,label:'الكمية الكاملة: 3% من آخر وزن'}}
+    if(p.feeding?.taperComplete)return{qty:target,label:'بعد اكتمال التدرج: 3% من آخر وزن'};
+    return{qty:null,label:`الهدف بعد التدرج ${target.toFixed(2)} كجم — لا يوجد رقم تدرج موثق لهذا الوزن`};
+  }
+  window.markTaperCompleteV4=function(pid){const p=plan(pid);p.feeding=p.feeding||{};p.feeding.taperComplete=true;p.feeding.taperCompletedAt=today();save();closeModal();openFeedingLogModal(pid)};
+  window.resetTaperV4=function(pid){const p=plan(pid);p.feeding.taperComplete=false;p.feeding.taperCompletedAt='';save();render()};
+
+  function recipe(type,cake='peanut_cake'){
+    return type==='sheep'
+      ?[['sorghum','فتريتة مدروشة',.50],[cake,cake==='sesame_cake'?'أمباز سمسم':'أمباز فول سوداني',.20],['wheat_bran','ردة قمح',.25],['minerals','أملاح معدنية وفيتامينات',.03],['limestone','جير مطفي مخصص للأعلاف',.02]]
+      :[['sorghum','فتريتة مدروشة',.50],[cake,cake==='sesame_cake'?'أمباز سمسم':'أمباز فول سوداني',.30],['wheat_bran','ردة قمح',.15],['minerals','أملاح معدنية وفيتامينات',.03],['limestone','جير مطفي مخصص للأعلاف',.02]];
+  }
+  function feedMatch(pid,code){const fs=planFeeds(pid).filter(f=>rem(f)>0);const byCode=fs.find(f=>f.catalogCode===code);if(byCode)return byCode;const tests={sorghum:/فتريت|ذرة/,peanut_cake:/أمباز.*فول/,sesame_cake:/أمباز.*سمسم/,wheat_bran:/ردة/,minerals:/أملاح.*معدنية|فيتامين/,limestone:/جير|حجر.*جيري/};return fs.find(f=>tests[code]?.test(f.name||''))||null}
+  function preferredCake(pid,p){const saved=p.feeding?.cakeCode||'peanut_cake';if(feedMatch(pid,saved))return saved;const other=saved==='peanut_cake'?'sesame_cake':'peanut_cake';return feedMatch(pid,other)?other:saved}
+  function recipeAvailability(pid,type,cake){const items=recipe(type,cake).map(x=>({code:x[0],name:x[1],ratio:x[2],stock:feedMatch(pid,x[0])}));return{items,ok:items.every(x=>x.stock)}}
+  function readyConcentrates(pid){return planFeeds(pid).filter(f=>rem(f)>0&&f.category==='concentrate'&&!['sorghum','peanut_cake','sesame_cake','wheat_bran'].includes(f.catalogCode))}
+  window.feedV4SyncRow=function(input){const row=input.closest('.v4-animal-feed'),r=row?.querySelector('[data-rough]');if(r&&!r.dataset.manual)r.value=(Number(input.value||0)*1.5).toFixed(3)};
+  window.feedV4ManualRough=function(input){input.dataset.manual='1'};
+  window.feedV4Mode=function(sel){const f=sel.form;f.querySelector('[data-lecture-mode]').style.display=sel.value==='lecture'?'block':'none';f.querySelector('[data-ready-mode]').style.display=sel.value==='ready'?'block':'none'};
+
+  window.openFeedingLogModal=function(pid){
+    const p=plan(pid),animals=activeAnimals(p),type=feedingAnimalType(p),rough=planFeeds(pid).filter(f=>f.category==='roughage'&&rem(f)>0),ready=readyConcentrates(pid),cake=preferredCake(pid,p);
+    if(!animals.length){alert('لا توجد حيوانات نشطة.');return}
+    if(!rough.length){modal(`<div class="modal-head"><h3>أضف العلف المالئ أولًا</h3><button class="close" onclick="closeModal()">×</button></div><div class="v4-feed-note">لا يوجد تبن/قش/دريس مسجل في المخزون.</div><button class="btn primary" onclick="closeModal();openFeedModal('${pid}')">إضافة أعلاف</button>`);return}
+    const avail=recipeAvailability(pid,type,cake),canLecture=avail.ok,mode=canLecture?'lecture':(ready.length?'ready':'lecture');
+    const animalRows=animals.map(a=>{const s=courseStep(a,p),w=Number(latest(a).value)||a.buyWeight,q=s.qty,r=q==null?'':roughageGeneral(q);return `<div class="v4-animal-feed" data-animal="${a.id}"><div class="who"><strong>#${esc(a.tag)} — ${w} كجم</strong><small>${esc(s.label)}</small></div><div class="field"><label>المركز اليوم — كجم</label><input name="conc_${a.id}" type="number" min="0" step=".001" value="${q==null?'':q}" placeholder="أدخل الكمية الفعلية" oninput="feedV4SyncRow(this)" required></div><div class="field"><label>المالئ اليوم — كجم</label><input data-rough name="rough_${a.id}" type="number" min="0" step=".001" value="${r}" oninput="feedV4ManualRough(this)" required><div class="v4-feed-source">القاعدة العامة: المركز × 1.5</div></div></div>`}).join('');
+    const missing=avail.items.filter(x=>!x.stock).map(x=>x.name);
+    const recipeHtml=recipe(type,cake).map(x=>`<div><strong>${x[1]}</strong>${Math.round(x[2]*100)} كجم / 100</div>`).join('');
+    modal(`<div class="modal-head"><div><h3>تغذية اليوم</h3><div class="small muted">اكتب ما قُدم فعلًا؛ كل حيوان في سطر واحد.</div></div><button class="close" onclick="closeModal()">×</button></div>
+    ${animals.some(a=>courseStep(a,p).qty==null)?`<div class="v4-feed-note"><strong>التدرج:</strong> المحاضرة أعطت أرقامًا يومية محددة فقط لعجل 200 كجم وخروف 20 كجم. للحيوانات الأخرى يعرض النظام هدف 3% لكنه لا يخترع خطوات تدرج. إذا كنت أكملت التدرج فعلًا، <button type="button" class="btn small" onclick="markTaperCompleteV4('${pid}')">أكملت التدرج</button></div>`:''}
+    <form id="feedingV4Form" onsubmit="createFeedingLogV4(event,'${pid}')"><input type="hidden" name="date" value="${today()}">${animalRows}
+      <div class="card" style="margin-top:12px"><div class="section-title"><div><h3>من أين تأتي المركزات؟</h3><div class="small muted">اختر الخلطة أو علفًا جاهزًا.</div></div></div><div class="field"><label>طريقة المركزات</label><select name="mixMode" onchange="feedV4Mode(this)"><option value="lecture" ${mode==='lecture'?'selected':''}>خلطة المحاضرة — يخصم المكونات تلقائيًا</option>${ready.length?`<option value="ready" ${mode==='ready'?'selected':''}>علف مركز جاهز من المخزون</option>`:''}</select></div>
+      <div data-lecture-mode style="display:${mode==='lecture'?'block':'none'}"><div class="v4-mini-recipe">${recipeHtml}</div>${canLecture?`<div class="assessment ok" style="margin-top:9px">✓ مكونات الخلطة موجودة في المخزون.</div>`:`<div class="v4-feed-note">ينقص من المخزون: ${missing.map(esc).join('، ')}. أضفها أو استخدم علفًا مركزًا جاهزًا إن كان لديك.</div>`}<div class="field" style="margin-top:9px"><label>نوع الأمباز في هذه الخلطة</label><select name="cakeCode"><option value="peanut_cake" ${cake==='peanut_cake'?'selected':''}>أمباز فول سوداني</option><option value="sesame_cake" ${cake==='sesame_cake'?'selected':''}>أمباز سمسم</option></select></div></div>
+      <div data-ready-mode style="display:${mode==='ready'?'block':'none'}"><div class="field"><label>العلف المركز الجاهز</label><select name="readyFeed">${ready.map(f=>`<option value="${f.id}">${esc(f.name)} — متبقي ${rem(f).toFixed(2)} كجم</option>`).join('')}</select></div></div>
+      <div class="field" style="margin-top:9px"><label>العلف المالئ المستخدم</label><select name="roughFeed" required>${rough.map(f=>`<option value="${f.id}">${esc(f.name)} — متبقي ${rem(f).toFixed(2)} كجم</option>`).join('')}</select></div>
+      <div class="source-note">خلطة المحاضرة للعجول: 50 فتريتة + 30 أمباز + 15 ردة + 3 أملاح/فيتامينات + 2 جير. للضأن: 50 + 20 + 25 + 3 + 2. المالئ يُقدم منفصلًا عن المركزات.</div></div>
+      <details class="v4-advanced"><summary>تفاصيل اختيارية</summary><div class="check-grid" style="margin-top:10px"><label class="check-item"><input type="checkbox" name="waterOk">الماء متوفر ونظيف</label><label class="check-item"><input type="checkbox" name="twoMeals">قُسمت الكمية على وجبتين</label><label class="check-item"><input type="checkbox" name="diarrhea">ظهر إسهال</label><label class="check-item"><input type="checkbox" name="lowAppetite">شهية ضعيفة</label><label class="check-item"><input type="checkbox" name="bloat">نفاخ</label><label class="check-item"><input type="checkbox" name="lethargy">خمول</label></div><div class="field"><label>ملاحظة</label><input name="note" placeholder="اختياري"></div></details>
+      <div class="modal-actions"><button type="button" class="btn" onclick="closeModal()">إلغاء</button><button class="btn primary">حفظ تغذية اليوم</button></div></form>`);
+  };
+
+  window.createFeedingLogV4=function(ev,pid){
+    ev.preventDefault();const f=new FormData(ev.target),p=plan(pid),animals=activeAnimals(p),animalEntries=[];let totalC=0,totalR=0;
+    for(const a of animals){const c=Number(f.get('conc_'+a.id)),r=Number(f.get('rough_'+a.id));if(!(c>=0)||!(r>=0)){alert('راجع كمية المركز والمالئ لكل حيوان.');return}animalEntries.push({animalId:a.id,concentrateKg:c,roughageKg:r});totalC+=c;totalR+=r}
+    const roughFeed=state.feeds.find(x=>x.id===f.get('roughFeed'));if(!roughFeed||rem(roughFeed)+1e-9<totalR){alert('كمية العلف المالئ في المخزون لا تكفي الكمية المسجلة.');return}
+    const mode=f.get('mixMode')||'lecture',consumed=[];
+    if(mode==='lecture'){
+      const cake=f.get('cakeCode')||p.feeding?.cakeCode||'peanut_cake',a=recipeAvailability(pid,feedingAnimalType(p),cake);if(!a.ok){alert('مكونات خلطة المحاضرة غير مكتملة في المخزون.');return}
+      for(const x of a.items){const need=totalC*x.ratio;if(rem(x.stock)+1e-9<need){alert(`المخزون لا يكفي: ${x.name}. المطلوب ${need.toFixed(2)} كجم.`);return}}
+      a.items.forEach(x=>{const q=totalC*x.ratio;x.stock.usedKg=(Number(x.stock.usedKg)||0)+q;consumed.push({feedId:x.stock.id,name:x.stock.name,kg:q})});p.feeding.cakeCode=cake;
+    }else{
+      const cf=state.feeds.find(x=>x.id===f.get('readyFeed'));if(!cf||rem(cf)+1e-9<totalC){alert('العلف المركز الجاهز في المخزون لا يكفي.');return}cf.usedKg=(Number(cf.usedKg)||0)+totalC;consumed.push({feedId:cf.id,name:cf.name,kg:totalC});
+    }
+    roughFeed.usedKg=(Number(roughFeed.usedKg)||0)+totalR;consumed.push({feedId:roughFeed.id,name:roughFeed.name,kg:totalR});
+    const log={id:uid('fl'),planId:pid,date:f.get('date')||today(),createdAt:nowIso(),eventBatchId:batchId(),animalEntries,totalConcentrateKg:+totalC.toFixed(3),totalRoughageKg:+totalR.toFixed(3),concentrateKg:+totalC.toFixed(3),roughageKg:+totalR.toFixed(3),mixMode:mode,feedConsumption:consumed,waterAvailable:!!f.get('waterOk'),morningMeal:!!f.get('twoMeals'),afternoonMeal:!!f.get('twoMeals'),diarrhea:!!f.get('diarrhea'),lowAppetite:!!f.get('lowAppetite'),bloat:!!f.get('bloat'),lethargy:!!f.get('lethargy'),note:f.get('note')||''};
+    state.feedingLogs.push(log);save();closeModal();render();
+    if(log.diarrhea||log.lowAppetite||log.bloat||log.lethargy)setTimeout(()=>alert('تم حفظ التغذية مع علامة غير طبيعية. حسب المحاضرة: ارجع خطوة في التدرج عند ظهور العلامات، والنفاخ الشديد يحتاج تدخلًا سريعًا/طبيبًا.'),0);
+  };
+  window.createFeedingLog=window.createFeedingLogV4;
+
+  function feedEventDetail(log){
+    if(log.animalEntries?.length)return log.animalEntries.map(e=>`الحيوان #${esc(tag(e.animalId))}: ${Number(e.concentrateKg||0).toFixed(2)} كجم مركز + ${Number(e.roughageKg||0).toFixed(2)} كجم مالئ`).join('<br>');
+    return `المركزات: ${Number(log.concentrateKg||0).toFixed(2)} كجم • المالئ: ${Number(log.roughageKg||0).toFixed(2)} كجم`;
+  }
+  function pushEvent(out,e){if(e.date)out.push(e)}
+  window.herdEventsV4=function(p){
+    const out=[];
+    planFeedingLogs(p.id).forEach(l=>pushEvent(out,{date:l.date,createdAt:l.createdAt,type:'feed',icon:'🌾',title:'تغذية القطيع',scope:'القطيع',summary:`${Number((l.totalConcentrateKg??l.concentrateKg)||0).toFixed(2)} كجم مركز • ${Number((l.totalRoughageKg??l.roughageKg)||0).toFixed(2)} كجم مالئ`,details:feedEventDetail(l)}));
+    state.daily.filter(d=>d.planId===p.id).forEach(d=>{if(d.shelterCleaned)pushEvent(out,{date:d.date,createdAt:d.createdAt,type:'clean',icon:'🧹',title:'نظافة الزريبة',scope:'القطيع',summary:'تم تسجيل نظافة الزريبة',details:d.note||''});const ws=(d.entries||[]).filter(x=>x.weight);if(ws.length)pushEvent(out,{date:d.date,createdAt:d.createdAt,type:'weight',icon:'⚖️',title:'تسجيل أوزان',scope:ws.length>1?'القطيع':'#'+tag(ws[0].animalId),summary:`تم تسجيل وزن ${ws.length} حيوان`,details:ws.map(x=>`#${esc(tag(x.animalId))}: ${x.weight} كجم`).join('<br>')})});
+    const healthGroups=new Map();planHealthLogs(p.id).forEach(l=>{const k=l.eventBatchId||('health-'+l.date+'-'+(l.note?.startsWith('فحص سريع')?'quick':l.id));if(!healthGroups.has(k))healthGroups.set(k,[]);healthGroups.get(k).push(l)});healthGroups.forEach(ls=>{const first=ls[0],bad=ls.filter(x=>(typeof healthDanger==='function'&&healthDanger(x).length)||x.diarrhea||x.leftBloat||x.lethargy);pushEvent(out,{date:first.date,createdAt:first.createdAt,type:'health',icon:'♡',title:bad.length?'متابعة صحية — توجد ملاحظات':'فحص صحي للقطيع',scope:ls.length>1?'القطيع':'#'+tag(first.animalId),summary:bad.length?`${bad.length} حالة بها ملاحظة`:`تم فحص ${ls.length} حيوان`,details:ls.map(x=>`#${esc(tag(x.animalId))}: ${esc(x.note||((typeof healthDanger==='function'&&healthDanger(x).join('، '))||'طبيعي'))}`).join('<br>')})});
+    planHealthEvents(p.id).forEach(e=>pushEvent(out,{date:e.date,createdAt:e.createdAt,type:'preventive',icon:'💉',title:typeof healthEventLabel==='function'?healthEventLabel(e.kind):'إجراء وقائي',scope:e.animalId?'#'+tag(e.animalId):'القطيع',summary:e.guidance||'إجراء وقائي مسجل',details:e.note||''}));
+    planTreatments(p.id).forEach(t=>pushEvent(out,{date:t.start,createdAt:t.createdAt,type:'treatment',icon:'💊',title:`علاج: ${esc(t.name)}`,scope:(t.animalIds||[]).length===1?'#'+tag(t.animalIds[0]):`${(t.animalIds||[]).length} حيوانات`,summary:t.dose?`الجرعة المسجلة: ${esc(t.dose)}`:(t.reason||'علاج مسجل'),details:[t.reason,t.route?`الطريقة: ${t.route}`:'',t.withdrawalUntil?`فترة السحب حتى ${t.withdrawalUntil}`:''].filter(Boolean).map(esc).join('<br>')}));
+    planExpenses(p.id).forEach(e=>pushEvent(out,{date:e.date,createdAt:e.createdAt,type:'expense',icon:'💰',title:`مصروف: ${esc(e.type||'مصروف')}`,scope:e.animalId?'#'+tag(e.animalId):'الخطة',summary:fmt(Number(e.amount)||0),details:e.desc||e.note||e.description||''}));
+    planSales(p.id).forEach(s=>pushEvent(out,{date:s.date,createdAt:s.createdAt,type:'sale',icon:'↗',title:'بيع حيوان',scope:(s.animalIds||[]).map(x=>'#'+tag(x)).join('، ')||'بيع',summary:`${fmt(Number(s.amount)||0)}${s.buyer?' • '+esc(s.buyer):''}`,details:s.place||''}));
+    (state.emergencies||[]).filter(e=>e.planId===p.id).forEach(e=>pushEvent(out,{date:e.date||e.createdAt?.slice(0,10),createdAt:e.createdAt,type:'emergency',icon:'🚨',title:typeof emergencyTypeLabel==='function'?emergencyTypeLabel(e.type):'حالة طارئة',scope:e.animalId?'#'+tag(e.animalId):'القطيع',summary:e.status==='resolved'?'تم إغلاق الحالة':'حالة مفتوحة',details:e.note||''}));
+    planFeeds(p.id).forEach(f=>pushEvent(out,{date:f.purchased,createdAt:f.createdAt,type:'feedbuy',icon:'📦',title:`شراء علف: ${esc(f.name)}`,scope:'المخزون',summary:`${Number(f.qtyKg||0).toFixed(2)} كجم`,details:f.currency&&f.originalUnitCost!=null?`سعر الكيلو: ${esc(f.originalUnitCost)} ${esc(f.currency)}`:''}));
+    planAnimals(p.id).forEach(a=>pushEvent(out,{date:a.buyDate,createdAt:a.createdAt,type:'animal',icon:'🐄',title:'إضافة حيوان للقطيع',scope:'#'+tag(a.id),summary:`وزن الشراء ${Number(a.buyWeight||0).toFixed(1)} كجم${a.buyPlace?' • '+esc(a.buyPlace):''}`,details:a.buyPrice?`سعر الشراء: ${fmt(Number(a.buyPrice)||0)}`:''}));
+    planAnimals(p.id).forEach(a=>(a.notes||[]).forEach(n=>pushEvent(out,{date:n.date,createdAt:n.createdAt,type:'note',icon:'✎',title:'ملاحظة على حيوان',scope:'#'+tag(a.id),summary:esc(n.text||''),details:''})));
+    (state.otherRevenues||[]).filter(x=>x.planId===p.id).forEach(r=>pushEvent(out,{date:r.date,createdAt:r.createdAt,type:'revenue',icon:'＋',title:'إيراد آخر',scope:'الخطة',summary:fmt(Number(r.amount)||0),details:r.note||r.description||''}));
+    return out.sort((a,b)=>((b.date||'')+(b.createdAt||'')).localeCompare((a.date||'')+(a.createdAt||'')));
+  };
+  function dateLabel(d){if(d===today())return'اليوم';const y=new Date();y.setDate(y.getDate()-1);if(d===y.toISOString().slice(0,10))return'أمس';try{return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{weekday:'long',day:'numeric',month:'short'})}catch(_){return d}}
+  function eventCard(e){const has=e.details&&String(e.details).trim();return `<div class="v4-event"><div class="v4-time">${localTime(e.createdAt)}</div><div class="v4-evicon">${e.icon}</div><div><h4>${e.title}<span class="v4-scope">${esc(e.scope)}</span></h4><p>${e.summary||''}</p>${has?`<details><summary>التفاصيل</summary><div class="v4-event-details">${e.details}</div></details>`:''}</div></div>`}
+  window.timelineHtmlV4=function(p,limitDays=0){const es=herdEventsV4(p),groups={};es.forEach(e=>(groups[e.date]||(groups[e.date]=[])).push(e));const dates=Object.keys(groups).sort().reverse(),show=limitDays?dates.slice(0,limitDays):dates;if(!show.length)return empty('لا توجد أحداث مسجلة بعد.');return `<div class="v4-timeline">${show.map((d,i)=>`<details class="v4-day" ${i===0?'open':''}><summary><span>${dateLabel(d)}</span><span class="v4-day-count">${groups[d].length} حدث</span></summary><div class="v4-events">${groups[d].map(eventCard).join('')}</div></details>`).join('')}</div>`}
+  window.timelineTab=function(p){return `<div class="page-head"><div><h2>سجل القطيع</h2><p>كل ما حدث مرتب حسب اليوم؛ التفاصيل مخفية حتى تحتاجها.</p></div><button class="btn primary" onclick="openEasyActions('${p.id}')">+ تسجيل حدث</button></div>${timelineHtmlV4(p)}`};
+
+  window.feedingTab=function(p){
+    const animals=activeAnimals(p),type=feedingAnimalType(p),cake=preferredCake(p.id,p),avail=recipeAvailability(p.id,type,cake),todayLog=planFeedingLogs(p.id).find(x=>x.date===today());
+    const list=animals.map(a=>{const s=courseStep(a,p);return `<div class="v4-simple-feed-row"><div><strong>#${esc(a.tag)} — ${Number(latest(a).value)||a.buyWeight} كجم</strong><small>${esc(s.label)}</small></div><div>${s.qty==null?`<span class="badge sell">أدخل التدرج الفعلي</span>`:`<strong>${Number(s.qty).toFixed(2)} كجم مركز</strong><small>${roughageGeneral(s.qty).toFixed(2)} كجم مالئ</small>`}</div></div>`}).join('');
+    return `<div class="card"><div class="section-title"><div><h3>العلف اليوم</h3><div class="small muted">الكمية لكل حيوان أولًا.</div></div>${todayLog?'<span class="v4-done-chip">✓ تم التسجيل اليوم</span>':`<button class="btn primary" onclick="openFeedingLogModal('${p.id}')">سجل تغذية اليوم</button>`}</div><div class="v4-simple-feed-list">${list||empty('لا توجد حيوانات')}</div></div>
+    <div class="card" style="margin-top:12px"><div class="section-title"><div><h3>خلطة ${type==='sheep'?'الضأن':'العجول'}</h3><div class="small muted">100 كجم — يخصم النظام مكوناتها تلقائيًا عند استخدامها</div></div><button class="btn" onclick="openFeedModal('${p.id}')">المخزون</button></div><div class="v4-mini-recipe">${recipe(type,cake).map(x=>`<div><strong>${x[1]}</strong>${Math.round(x[2]*100)} كجم</div>`).join('')}</div><div class="assessment ${avail.ok?'ok':'review'}" style="margin-top:9px">${avail.ok?'✓ مكونات الخلطة متوفرة في المخزون.':'بعض مكونات الخلطة غير موجودة؛ أضفها أو استخدم علفًا مركزًا جاهزًا.'}</div>${p.feeding?.taperComplete?`<div class="small muted" style="margin-top:8px">تم تأكيد اكتمال التدرج بتاريخ ${p.feeding.taperCompletedAt||'-'} • <button class="btn small" onclick="resetTaperV4('${p.id}')">إعادة حالة التدرج</button></div>`:''}</div>
+    <details class="v4-advanced"><summary>المرجع والتفاصيل المتقدمة</summary><div style="margin-top:10px">${oldFeedingTab?oldFeedingTab(p):''}</div></details>`;
+  };
+
+  window.overviewTab=function(p,s){
+    const n=ezNext(p),a=activeAnimals(p),feed=feedDone(p),health=healthDone(p),clean=cleanDone(p),due=dueWeights(p).length;
+    const task=(done,title,sub,act)=>`<button class="v4-action ${done?'done':''}" onclick="${act}"><span class="v4-state">${done?'✓':'›'}</span><strong>${title}</strong><small>${sub}</small></button>`;
+    return `<div class="v4-next"><div class="eyebrow">افعل هذا الآن</div><h2>${n.title}</h2><p>${n.sub}</p><button class="btn primary" onclick="ezRunNext('${p.id}')">${n.button}</button></div>
+    ${a.length?`<div class="v4-actions">${task(feed,'التغذية',feed?'تم تسجيلها اليوم':'سجل كمية كل حيوان',`openFeedingLogModal('${p.id}')`)}${task(clean,'نظافة الزريبة',clean?'تمت اليوم':'ضغطة واحدة بعد التنفيذ',`quickCleanShelter('${p.id}')`)}${task(health,'فحص الصحة',health?'تم فحص القطيع':'طبيعي للجميع أو توجد مشكلة',`openHealthDailyModal('${p.id}')`)}${task(due===0,'الوزن',due?`${due} حيوان حان وزنه`:'ليس مطلوبًا الآن',`openEasyWeightModal('${p.id}')`)}</div>`:''}
+    <div class="card"><div class="section-title"><div><h3>آخر أحداث القطيع</h3><div class="small muted">الأحداث مجمعة حسب التاريخ؛ الوقت يضاف تلقائيًا للأحداث الجديدة.</div></div><button class="btn small" onclick="setTab('timeline')">فتح السجل</button></div>${timelineHtmlV4(p,2)}</div>`;
+  };
+
+  window.tabContent=function(p,s){if(state.planTab==='timeline')return timelineTab(p);return oldTabContent?oldTabContent(p,s):overviewTab(p,s)};
+  window.planPage=function(){const p=plan();if(!p)return plansPage();const s=stats(p),n=ezNext(p),nav=state.planTab||'overview';const tabs=[['overview','اليوم'],['timeline','السجل'],['animals','القطيع'],['feeding','العلف'],['health','الصحة'],['sales','البيع']];const head=`<div class="plan-summary"><div class="row"><div><div style="margin-bottom:7px">${statusBadge(p.status)} <span class="badge">اليوم ${typeof ezDay==='function'?ezDay(p):cycleDay(p)} • ${typeof ezPhase==='function'?ezPhase(p):cyclePhase(p).name}</span></div><h2>${p.name}</h2></div><div class="actions"><button class="btn primary" onclick="ezRunNext('${p.id}')">${n.button}</button><button class="btn" onclick="openEasyManage('${p.id}')" aria-label="إعدادات الخطة">⚙</button></div></div></div><div class="tabs">${tabs.map(t=>`<button class="tab ${nav===t[0]?'active':''}" onclick="setTab('${t[0]}')">${t[1]}</button>`).join('')}</div>`;return layout(head+window.tabContent(p,s),p.name,'نفّذ الخطوة الظاهرة فقط')};
+
+  save();render();
+})();
+</script>
 </body></html>
