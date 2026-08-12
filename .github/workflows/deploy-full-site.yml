@@ -22,6 +22,9 @@ jobs:
       - name: Apply zero-training herd workflow
         run: python .deploy/apply-usability-v4.py index.html
 
+      - name: Apply per-animal journey timeline
+        run: python .deploy/apply-animal-journey-v5.py index.html
+
       - name: Verify core features and JavaScript syntax
         run: |
           grep -q "purchaseCheckNames" index.html
@@ -31,7 +34,11 @@ jobs:
           grep -q "BEGINNER_FLOW_V2" index.html
           grep -q "FEED_CURRENCY_CARDS_V3" index.html
           grep -q "USABILITY_V4_HERD_TIMELINE_FEEDING" index.html
+          grep -q "ANIMAL_JOURNEY_V5" index.html
           grep -q "سجل القطيع" index.html
+          grep -q "رحلة الحيوان" index.html
+          grep -q "animalEventsV5" index.html
+          grep -q "animalJourneyHtmlV5" index.html
           grep -q "quickCleanShelter" index.html
           grep -q "createFeedingLogV4" index.html
           grep -q "animalEntries" index.html
@@ -52,7 +59,7 @@ jobs:
           PY
           node --check /tmp/fattening-site.js
 
-      - name: Runtime UI and herd-flow smoke test
+      - name: Runtime UI herd and animal journey smoke test
         run: |
           npm install jsdom@24 --no-save --silent
           node - <<'JS'
@@ -109,13 +116,29 @@ jobs:
               assert(last.createdAt,'feeding timestamp missing');
               assert(last.animalEntries?.length===ev('planAnimals(plan().id).filter(a=>a.status!=="sold").length'),'per-animal feed rows missing');
               assert(last.feedConsumption?.length>=2,'feed inventory consumption not recorded');
-              const feedEvent=ev('herdEventsV4(plan()).find(x=>x.type==="feed")');
-              assert(feedEvent&&feedEvent.details.includes('الحيوان #'),'timeline lacks per-animal feed detail');
 
-              ev('state.planTab="timeline"; render()');
-              assert(w.document.body.textContent.includes('تغذية القطيع'),'new feeding event not visible in timeline');
+              const aid=ev('planAnimals(plan().id).find(a=>a.status!=="sold").id');
+              ev(`openAnimal(${JSON.stringify(aid)})`);
+              assert(w.document.body.textContent.includes('رحلة الحيوان'),'animal journey heading missing');
+              assert(w.document.querySelector('.v5-animal-day'),'animal date grouping missing');
+              const animalEvents=ev(`animalEventsV5(state.animals.find(a=>a.id===${JSON.stringify(aid)}))`);
+              assert(animalEvents.some(x=>x.type==='animal'),'animal admission event missing');
+              assert(animalEvents.some(x=>x.type==='feed'),'animal feeding event missing');
+              assert(animalEvents.some(x=>x.type==='clean'&&x.shared),'shared shelter cleaning missing from animal journey');
+              const feedEvent=animalEvents.find(x=>x.type==='feed');
+              assert(feedEvent.summary.includes('كجم مركز'),'animal feed quantity missing');
+              ev('closeModal()');
+
+              const sold=ev('state.animals.find(a=>a.status==="sold")');
+              if(sold){
+                const soldEvents=ev(`animalEventsV5(state.animals.find(a=>a.id===${JSON.stringify(sold.id)}))`);
+                assert(soldEvents.some(x=>x.type==='sale'),'sold animal sale event missing');
+                const saleDate=ev(`state.sales.find(s=>(s.animalIds||[]).includes(${JSON.stringify(sold.id)})).date`);
+                assert(soldEvents.every(x=>x.date<=saleDate),'animal journey contains event after sale');
+              }
+
               assert(!errors.length,'runtime errors detected');
-              console.log('Runtime herd-flow smoke test passed');
+              console.log('Runtime herd and animal journey smoke test passed');
             }catch(e){errors.push(e.stack||String(e));}
             if(errors.length){console.error(errors.join('\n---\n'));process.exit(1)}
           },120);
@@ -127,5 +150,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Simplify herd workflow timeline and feeding"
+          git commit -m "Add complete per-animal journey timeline"
           git push
