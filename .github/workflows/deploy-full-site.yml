@@ -40,7 +40,13 @@ jobs:
           echo "bf93df8d75fc28fb0f91da36a88ae599ebc9390526517170494c8536f7b9e46b  /tmp/apply-beginner-flow-v2.py" | sha256sum -c -
           python /tmp/apply-beginner-flow-v2.py index.html
 
-      - name: Verify lectures and beginner UX
+      - name: Apply feed checklist currency cards and visual redesign
+        run: |
+          cat .deploy/feed-ui-v3-01.b64 .deploy/feed-ui-v3-02.b64 | tr -d '\n' | base64 -d | gunzip > /tmp/apply-feed-ui-v3.py
+          echo "dd097cf2e1ac4f47615a8ecd78de793531c4beb5e7b886a3c1a1d65414ea3071  /tmp/apply-feed-ui-v3.py" | sha256sum -c -
+          python /tmp/apply-feed-ui-v3.py index.html
+
+      - name: Verify lectures and redesigned UX
         run: |
           grep -q "purchaseCheckNames" index.html
           grep -q "shelterCheckNames" index.html
@@ -63,11 +69,21 @@ jobs:
           grep -q "BEGINNER_FLOW_V2" index.html
           grep -q "الخطوة التالية" index.html
           grep -q "كل الحيوانات طبيعية اليوم" index.html
-          grep -q "ثلاث خطوات فقط" index.html
           grep -q "openEasyWeightModal" index.html
-          grep -q "openEasyActions" index.html
-          grep -q "الموقع يخبرك بالخطوة التالية" index.html
-          test "$(wc -c < index.html)" -gt 240000
+          grep -q "FEED_CURRENCY_CARDS_V3" index.html
+          grep -q "IBM+Plex+Sans+Arabic" index.html
+          grep -q "1 ريال سعودي = كم جنيه سوداني" index.html
+          grep -q "فتريتة مدروشة" index.html
+          grep -q "أمباز فول سوداني" index.html
+          grep -q "تبن السمسم" index.html
+          grep -q "مولاس" index.html
+          grep -q "أزولا جافة" index.html
+          grep -q "feed-stock-card" index.html
+          grep -q "createFeedChecklistV3" index.html
+          grep -q "window.uiIcon" index.html
+          grep -q "ريال سعودي" index.html
+          grep -q "دولار أمريكي" index.html
+          test "$(wc -c < index.html)" -gt 270000
           python - <<'PY'
           from pathlib import Path
           import re
@@ -78,11 +94,11 @@ jobs:
           PY
           node --check /tmp/fattening-site.js
 
-      - name: Commit beginner UX site
+      - name: Commit redesigned site
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Make UX step-by-step for beginners"
+          git commit -m "Improve feed purchasing and visual design"
           git push
