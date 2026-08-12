@@ -34,7 +34,13 @@ jobs:
           echo "a125a738aff81f4b380a24fa290a968a3bbb4623bd098d1f02af4572becd245c  /tmp/apply-ux-simplification.py" | sha256sum -c -
           python /tmp/apply-ux-simplification.py index.html
 
-      - name: Verify lectures and simplified UX
+      - name: Apply beginner step-by-step UX
+        run: |
+          cat .deploy/beginner-v2-01.b64 .deploy/beginner-v2-02.b64 .deploy/beginner-v2-03.b64 | tr -d '\n' | base64 -d | gunzip > /tmp/apply-beginner-flow-v2.py
+          echo "bf93df8d75fc28fb0f91da36a88ae599ebc9390526517170494c8536f7b9e46b  /tmp/apply-beginner-flow-v2.py" | sha256sum -c -
+          python /tmp/apply-beginner-flow-v2.py index.html
+
+      - name: Verify lectures and beginner UX
         run: |
           grep -q "purchaseCheckNames" index.html
           grep -q "shelterCheckNames" index.html
@@ -54,11 +60,14 @@ jobs:
           grep -q "الربح = إجمالي الإيرادات" index.html
           grep -q "activeWithdrawal" index.html
           grep -q "UX_SIMPLIFICATION_V1" index.html
-          grep -q "مهام اليوم أولًا" index.html
-          grep -q "ماذا تحتاج أن تفعل الآن" index.html
-          grep -q "إدارة متقدمة" index.html
-          grep -q "openUxActions" index.html
-          test "$(wc -c < index.html)" -gt 215000
+          grep -q "BEGINNER_FLOW_V2" index.html
+          grep -q "الخطوة التالية" index.html
+          grep -q "كل الحيوانات طبيعية اليوم" index.html
+          grep -q "ثلاث خطوات فقط" index.html
+          grep -q "openEasyWeightModal" index.html
+          grep -q "openEasyActions" index.html
+          grep -q "الموقع يخبرك بالخطوة التالية" index.html
+          test "$(wc -c < index.html)" -gt 240000
           python - <<'PY'
           from pathlib import Path
           import re
@@ -69,11 +78,11 @@ jobs:
           PY
           node --check /tmp/fattening-site.js
 
-      - name: Commit simplified UX site
+      - name: Commit beginner UX site
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Simplify UX and reduce navigation noise"
+          git commit -m "Make UX step-by-step for beginners"
           git push
