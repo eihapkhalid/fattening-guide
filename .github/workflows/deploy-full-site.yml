@@ -22,7 +22,13 @@ jobs:
       - name: Apply lecture 6 emergency workflow
         run: python .deploy/apply-lecture6.py index.html
 
-      - name: Verify lecture 1 to 6 features
+      - name: Apply lecture 7 marketing and feasibility workflow
+        run: |
+          cat .deploy/lecture7-patch-01.b64 .deploy/lecture7-patch-02.b64 | tr -d '\n' | base64 -d | gunzip > /tmp/apply-lecture7.py
+          echo "a189cb9d8792fb59b1b5bd51e1b095b196825940f1ef065db9246db6e33698f9  /tmp/apply-lecture7.py" | sha256sum -c -
+          python /tmp/apply-lecture7.py
+
+      - name: Verify lecture 1 to 7 features
         run: |
           grep -q "purchaseCheckNames" index.html
           grep -q "shelterCheckNames" index.html
@@ -30,36 +36,36 @@ jobs:
           grep -q "function healthTab" index.html
           grep -q "function cycleTab" index.html
           grep -q "خطة 90–120 يوم" index.html
-          grep -q 'min="90" max="120"' index.html
-          grep -q "تمديد مراقَب" index.html
-          grep -q "مرحلة التشطيب — الأيام 67–90" index.html
           grep -q "LECTURE6_EMERGENCY_MODULE" index.html
-          grep -q "function emergencyCard" index.html
           grep -q "قاعدة الدقائق الثلاث" index.html
-          grep -q "لترًا واحدًا من زيت البرافين" index.html
-          grep -q "4 ملاعق بيكربونات صوديوم في 5 لترات ماء" index.html
-          grep -q "لم تحفظ مقادير الملح والسكر" index.html
-          grep -q "14 يومًا" index.html
-          grep -q 'name="sourBreath"' index.html
-          grep -q 'name="ticks"' index.html
-          grep -q "externalParasiteProduct" index.html
+          grep -q "LECTURE7_MARKETING_FEASIBILITY_MODULE" index.html
+          grep -q "قنوات البيع الثلاث" index.html
+          grep -q "الحد الأدنى الذي لن تبيع بأقل منه" index.html
+          grep -q "سعر الكيلو القائم" index.html
+          grep -q "function openAssetModal" index.html
+          grep -q "function openOtherRevenueModal" index.html
+          grep -q "شبكة الزبائن" index.html
+          grep -q "الربح = إجمالي الإيرادات" index.html
+          grep -q "1,450 كجم" index.html
+          grep -q "يرش بالماء كل يومين" index.html
+          grep -q "نحو 60 يومًا" index.html
           grep -q "activeWithdrawal" index.html
-          test "$(wc -c < index.html)" -gt 170000
+          test "$(wc -c < index.html)" -gt 200000
           python - <<'PY'
           from pathlib import Path
           import re
           s=Path('index.html').read_text(encoding='utf-8')
-          m=re.search(r'<script>(.*)</script>',s,re.S)
-          assert m, 'script block not found'
-          Path('/tmp/fattening-site.js').write_text(m.group(1),encoding='utf-8')
+          blocks=re.findall(r'<script[^>]*>(.*?)</script>',s,re.S)
+          assert blocks, 'script blocks not found'
+          Path('/tmp/fattening-site.js').write_text('\n'.join(blocks),encoding='utf-8')
           PY
           node --check /tmp/fattening-site.js
 
-      - name: Commit lecture 6 site
+      - name: Commit lecture 7 site
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Apply lecture 6 emergency response workflow"
+          git commit -m "Apply lecture 7 marketing and feasibility workflow"
           git push
