@@ -31,14 +31,12 @@ jobs:
           print('INLINE HANDLER ATTRIBUTES:',len(attrs))
           print('UNIQUE CALLED HANDLERS:',len(set(calls)))
           print('MISSING HANDLERS:',missing)
-          # Count all function declarations + window reassignments.
           counts=collections.Counter(re.findall(r'\bfunction\s+([A-Za-z_$][\w$]*)\s*\(',s))
           counts.update(re.findall(r'\bwindow\.([A-Za-z_$][\w$]*)\s*=',s))
           dup={k:v for k,v in counts.items() if v>1}
           print('DUPLICATE/OVERRIDDEN GLOBALS:')
           for k,v in sorted(dup.items(), key=lambda kv:(-kv[1],kv[0])):
               print(f'  {k}: {v}')
-          # Tab destinations used by click handlers.
           tabs=collections.Counter(re.findall(r"setTab\('([^']+)'\)",s))
           print('SETTAB DESTINATIONS:',dict(sorted(tabs.items())))
           if missing:
@@ -54,3 +52,53 @@ jobs:
           Path('/tmp/site.js').write_text('\n'.join(blocks),encoding='utf-8')
           PY
           node --check /tmp/site.js
+      - name: Runtime DOM smoke test
+        run: |
+          npm install jsdom@24 --no-save --silent
+          node - <<'JS'
+          const fs=require('fs');
+          const {JSDOM,VirtualConsole}=require('jsdom');
+          const html=fs.readFileSync('index.html','utf8');
+          const errs=[];
+          const vc=new VirtualConsole();
+          vc.on('jsdomError',e=>errs.push('JSDOM: '+e.message));
+          vc.on('error',e=>errs.push('console.error: '+e));
+          const dom=new JSDOM(html,{runScripts:'dangerously',url:'https://fattening.test/',pretendToBeVisual:true,virtualConsole:vc,beforeParse(w){w.alert=()=>{};w.confirm=()=>true;}});
+          const w=dom.window;
+          w.addEventListener('error',e=>errs.push('window error: '+(e.error?.stack||e.message)));
+          function ev(code){return w.eval(code)}
+          function assert(cond,msg){if(!cond)throw new Error(msg)}
+          setTimeout(()=>{
+            try{
+              const p=ev('plan()');
+              assert(p,'No current plan');
+              const tabs=['overview','animals','feeding','health','sales','feeds','cycle','reports','shelter','expenses','treatments'];
+              for(const t of tabs){
+                ev(`state.planTab=${JSON.stringify(t)}`);
+                const out=ev('tabContent(plan(),stats(plan()))');
+                assert(typeof out==='string' && out.length>20,'Empty tabContent for '+t);
+                console.log('TAB OK',t,out.length);
+              }
+              ev('state.planTab="overview"; render()');
+              ev('openEasyManage(plan().id)');
+              assert(w.document.querySelector('.modal-backdrop'),'Manage modal did not open');
+              console.log('MANAGE MODAL OK');
+              ev('closeModal(); openEasyActions(plan().id)');
+              assert(w.document.querySelector('.modal-backdrop'),'Actions modal did not open');
+              console.log('ACTIONS MODAL OK');
+              ev('closeModal(); openFeedModal(plan().id)');
+              assert(w.document.getElementById('feedPurchaseV3'),'Feed purchase modal did not open');
+              const cb=w.document.querySelector('input[name="feedCode"]');
+              assert(cb,'No feed checklist checkbox'); cb.click();
+              assert(w.document.querySelector('.feed-entry'),'Feed selection did not create entry');
+              console.log('FEED MODAL/CHECKLIST OK');
+              ev('closeModal(); state.planTab="health"; render()');
+              assert(w.document.body.textContent.includes('الصحة'),'Health render failed');
+              ev('state.planTab="sales"; render()');
+              assert(w.document.body.textContent.includes('البيع'),'Sales render failed');
+              console.log('CORE NAV OK');
+            }catch(e){errs.push(e.stack||String(e));}
+            if(errs.length){console.error('RUNTIME ERRORS\n'+errs.join('\n---\n'));process.exit(1)}
+            console.log('RUNTIME SMOKE TEST PASSED');
+          },50);
+          JS
