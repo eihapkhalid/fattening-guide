@@ -1,8 +1,6 @@
 name: Deploy full fattening site
 
 on:
-  push:
-    branches: [master]
   workflow_dispatch:
 
 permissions:
@@ -13,33 +11,4 @@ jobs:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Assemble lecture 4 site
-        run: cat .deploy/lecture4-fix01a.b64 .deploy/lecture4-fix01b.b64 .deploy/lecture4-large02.b64 .deploy/lecture4-large03.b64 .deploy/lecture4-large04.b64 .deploy/lecture4-large05.b64 .deploy/lecture4-large06.b64 | tr -d '\n' | base64 -d | gunzip > index.html
-
-      - name: Verify lecture 1 to 4 features
-        run: |
-          grep -q "purchaseCheckNames" index.html
-          grep -q "shelterCheckNames" index.html
-          grep -q "function feedingTab" index.html
-          grep -q "function healthTab" index.html
-          grep -q "openArrivalHealthModal" index.html
-          grep -q "openPreventiveEventModal" index.html
-          grep -q "activeWithdrawal" index.html
-          grep -q "withdrawalUntil" index.html
-          grep -q "bloodyDiarrhea" index.html
-          grep -q "leftBloat" index.html
-          grep -q "status:'quarantine'" index.html
-          grep -q "الصحة الوقائية" index.html
-          test "$(wc -c < index.html)" -gt 135000
-
-      - name: Commit lecture 4 site
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
-          if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Apply lecture 4 preventive health workflow"
-          git push
+      - run: echo "Deployment temporarily paused while lecture 5 payload is uploaded."
