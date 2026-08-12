@@ -19,18 +19,25 @@ jobs:
       - name: Apply JavaScript runtime stability fix
         run: python .deploy/fix-js-runtime.py index.html
 
+      - name: Apply zero-training herd workflow
+        run: python .deploy/apply-usability-v4.py index.html
+
       - name: Verify core features and JavaScript syntax
         run: |
           grep -q "purchaseCheckNames" index.html
           grep -q "shelterCheckNames" index.html
-          grep -q "function feedingTab" index.html
-          grep -q "function healthTab" index.html
-          grep -q "function cycleTab" index.html
           grep -q "LECTURE6_EMERGENCY_MODULE" index.html
           grep -q "LECTURE7_MARKETING_FEASIBILITY_MODULE" index.html
           grep -q "BEGINNER_FLOW_V2" index.html
           grep -q "FEED_CURRENCY_CARDS_V3" index.html
-          grep -q "createFeedChecklistV3" index.html
+          grep -q "USABILITY_V4_HERD_TIMELINE_FEEDING" index.html
+          grep -q "سجل القطيع" index.html
+          grep -q "quickCleanShelter" index.html
+          grep -q "createFeedingLogV4" index.html
+          grep -q "animalEntries" index.html
+          grep -q "خلطة المحاضرة — يخصم المكونات تلقائيًا" index.html
+          grep -q "لا يوجد رقم تدرج موثق لهذا الوزن" index.html
+          grep -q "وقت غير مسجل" index.html
           grep -q "window.ezNext=function ezNext" index.html
           grep -q "window.ezDay=function ezDay" index.html
           grep -q "window.ezPhase=function ezPhase" index.html
@@ -45,7 +52,7 @@ jobs:
           PY
           node --check /tmp/fattening-site.js
 
-      - name: Runtime UI smoke test
+      - name: Runtime UI and herd-flow smoke test
         run: |
           npm install jsdom@24 --no-save --silent
           node - <<'JS'
@@ -67,33 +74,58 @@ jobs:
               assert(w.document.body.textContent.includes('الرئيسية'),'dashboard failed');
               ev('state.currentPage="plans"; render()');
               assert(w.document.body.textContent.includes('خططي'),'plans failed');
-              const p=ev('state.currentPage="plans"; state.currentPlanId=state.plans[0].id; plan()');
+              const p=ev('state.currentPlanId=state.plans[0].id; state.currentPage="plan"; plan()');
               assert(p,'no current plan');
-              const tabs=['overview','animals','feeding','health','sales','feeds','cycle','reports','shelter','expenses','treatments'];
+
+              const tabs=['overview','timeline','animals','feeding','health','sales','feeds','cycle','reports','shelter','expenses','treatments'];
               for(const t of tabs){
-                ev(`state.planTab=${JSON.stringify(t)}; state.currentPage='plan'; render()`);
+                ev(`state.planTab=${JSON.stringify(t)}; render()`);
                 assert(w.document.querySelector('.content'),'render failed for '+t);
               }
-              ev('state.planTab="overview"; render(); openEasyManage(plan().id)');
-              assert(w.document.querySelector('.modal-backdrop'),'manage modal failed');
-              ev('closeModal(); openEasyActions(plan().id)');
-              assert(w.document.querySelector('.modal-backdrop'),'actions modal failed');
-              ev('closeModal(); openFeedModal(plan().id)');
-              assert(w.document.getElementById('feedPurchaseV3'),'feed modal failed');
-              const cb=w.document.querySelector('input[name="feedCode"]');
-              assert(cb,'feed checklist missing'); cb.click();
-              assert(w.document.querySelector('.feed-entry'),'feed card did not expand');
-              console.log('Runtime UI smoke test passed');
+
+              ev('state.planTab="timeline"; render()');
+              assert(w.document.body.textContent.includes('سجل القطيع'),'timeline screen missing');
+              assert(ev('herdEventsV4(plan()).length')>0,'timeline did not aggregate existing events');
+              assert(w.document.querySelector('.v4-day'),'timeline date grouping missing');
+
+              ev('state.planTab="overview"; render()');
+              assert(w.document.body.textContent.includes('افعل هذا الآن'),'single next-step block missing');
+              const beforeDaily=ev('state.daily.length');
+              ev('quickCleanShelter(plan().id)');
+              assert(ev('state.daily.length')>=beforeDaily,'quick clean failed');
+              assert(ev('state.daily.filter(x=>x.createdAt).length')>0,'new event timestamp missing');
+
+              ev('state.planTab="feeding"; render(); openFeedingLogModal(plan().id)');
+              assert(w.document.getElementById('feedingV4Form'),'feeding v4 modal failed');
+              const form=w.document.getElementById('feedingV4Form');
+              form.querySelectorAll('input[name^="conc_"]').forEach(x=>x.value='0.1');
+              form.querySelectorAll('input[name^="rough_"]').forEach(x=>x.value='0.15');
+              const mode=form.elements.mixMode;
+              if([...mode.options].some(o=>o.value==='ready')){mode.value='ready';w.feedV4Mode(mode)}
+              const beforeLogs=ev('state.feedingLogs.length');
+              w.createFeedingLogV4({preventDefault(){},target:form},p.id);
+              assert(ev('state.feedingLogs.length')===beforeLogs+1,'feeding log not created');
+              const last=ev('state.feedingLogs.at(-1)');
+              assert(last.createdAt,'feeding timestamp missing');
+              assert(last.animalEntries?.length===ev('planAnimals(plan().id).filter(a=>a.status!=="sold").length'),'per-animal feed rows missing');
+              assert(last.feedConsumption?.length>=2,'feed inventory consumption not recorded');
+              const feedEvent=ev('herdEventsV4(plan()).find(x=>x.type==="feed")');
+              assert(feedEvent&&feedEvent.details.includes('الحيوان #'),'timeline lacks per-animal feed detail');
+
+              ev('state.planTab="timeline"; render()');
+              assert(w.document.body.textContent.includes('تغذية القطيع'),'new feeding event not visible in timeline');
+              assert(!errors.length,'runtime errors detected');
+              console.log('Runtime herd-flow smoke test passed');
             }catch(e){errors.push(e.stack||String(e));}
             if(errors.length){console.error(errors.join('\n---\n'));process.exit(1)}
-          },100);
+          },120);
           JS
 
-      - name: Commit stable site
+      - name: Commit simplified site
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Fix JavaScript runtime and navigation state"
+          git commit -m "Simplify herd workflow timeline and feeding"
           git push
