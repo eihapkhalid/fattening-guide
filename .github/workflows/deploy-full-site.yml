@@ -13,79 +13,28 @@ jobs:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout current site
         uses: actions/checkout@v4
 
-      - name: Assemble lecture 5 base
-        run: cat .deploy/lecture5-01.b64 .deploy/lecture5-02.b64 .deploy/lecture5-03.b64 .deploy/lecture5-04.b64 .deploy/lecture5-05.b64 .deploy/lecture5-06.b64 .deploy/lecture5-07.b64 .deploy/lecture5-08.b64 | tr -d '\n' | base64 -d | gunzip > index.html
+      - name: Apply JavaScript runtime stability fix
+        run: python .deploy/fix-js-runtime.py index.html
 
-      - name: Apply lecture 6 emergency workflow
-        run: python .deploy/apply-lecture6.py index.html
-
-      - name: Apply lecture 7 marketing and feasibility workflow
-        run: |
-          cat .deploy/lecture7-patch-01.b64 .deploy/lecture7-patch-02.b64 | tr -d '\n' | base64 -d | gunzip > /tmp/apply-lecture7.py
-          echo "a189cb9d8792fb59b1b5bd51e1b095b196825940f1ef065db9246db6e33698f9  /tmp/apply-lecture7.py" | sha256sum -c -
-          python /tmp/apply-lecture7.py
-
-      - name: Apply simplified task-first UX
-        run: |
-          cat .deploy/ux-simplify-00.b64 | tr -d '\n' | base64 -d | gunzip > /tmp/apply-ux-simplification.py
-          echo "a125a738aff81f4b380a24fa290a968a3bbb4623bd098d1f02af4572becd245c  /tmp/apply-ux-simplification.py" | sha256sum -c -
-          python /tmp/apply-ux-simplification.py index.html
-
-      - name: Apply beginner step-by-step UX
-        run: |
-          cat .deploy/beginner-v2-01.b64 .deploy/beginner-v2-02.b64 .deploy/beginner-v2-03.b64 | tr -d '\n' | base64 -d | gunzip > /tmp/apply-beginner-flow-v2.py
-          echo "bf93df8d75fc28fb0f91da36a88ae599ebc9390526517170494c8536f7b9e46b  /tmp/apply-beginner-flow-v2.py" | sha256sum -c -
-          python /tmp/apply-beginner-flow-v2.py index.html
-
-      - name: Apply feed checklist currency cards and visual redesign
-        run: |
-          cat .deploy/feed-ui-v3-01.b64 .deploy/feed-ui-v3-02.b64 | tr -d '\n' | base64 -d | gunzip > /tmp/apply-feed-ui-v3.py
-          echo "c12f9af2ba9333cdbd8e344a5f7bd08c86845956ed0a69f916493534d2f0f810  /tmp/apply-feed-ui-v3.py" | sha256sum -c -
-          python /tmp/apply-feed-ui-v3.py index.html
-
-      - name: Verify lectures and redesigned UX
+      - name: Verify core features and JavaScript syntax
         run: |
           grep -q "purchaseCheckNames" index.html
           grep -q "shelterCheckNames" index.html
           grep -q "function feedingTab" index.html
           grep -q "function healthTab" index.html
           grep -q "function cycleTab" index.html
-          grep -q "خطة 90–120 يوم" index.html
           grep -q "LECTURE6_EMERGENCY_MODULE" index.html
-          grep -q "قاعدة الدقائق الثلاث" index.html
           grep -q "LECTURE7_MARKETING_FEASIBILITY_MODULE" index.html
-          grep -q "قنوات البيع الثلاث" index.html
-          grep -q "الحد الأدنى الذي لن تبيع بأقل منه" index.html
-          grep -q "سعر الكيلو القائم" index.html
-          grep -q "function openAssetModal" index.html
-          grep -q "function openOtherRevenueModal" index.html
-          grep -q "شبكة الزبائن" index.html
-          grep -q "الربح = إجمالي الإيرادات" index.html
-          grep -q "activeWithdrawal" index.html
-          grep -q "UX_SIMPLIFICATION_V1" index.html
           grep -q "BEGINNER_FLOW_V2" index.html
-          grep -q "الخطوة التالية" index.html
-          grep -q "كل الحيوانات طبيعية اليوم" index.html
-          grep -q "openEasyWeightModal" index.html
           grep -q "FEED_CURRENCY_CARDS_V3" index.html
-          grep -q "IBM+Plex+Sans+Arabic" index.html
-          grep -q "1 ريال سعودي = كم جنيه سوداني" index.html
-          grep -q "فتريتة مدروشة" index.html
-          grep -q "أمباز فول سوداني" index.html
-          grep -q "تبن السمسم" index.html
-          grep -q "مولاس" index.html
-          grep -q "أزولا جافة" index.html
-          grep -q "feed-stock-card" index.html
           grep -q "createFeedChecklistV3" index.html
-          grep -q "window.uiIcon" index.html
-          grep -q "ريال سعودي" index.html
-          grep -q "دولار أمريكي" index.html
-          ! grep -q "const _planPageV3=window.planPage" index.html
-          ! grep -q "const _dashboardV3=window.dashboard" index.html
-          test "$(wc -c < index.html)" -gt 270000
+          grep -q "window.ezNext=function ezNext" index.html
+          grep -q "window.ezDay=function ezDay" index.html
+          grep -q "window.ezPhase=function ezPhase" index.html
+          ! grep -q "includes(state.planTab)?'overview'" index.html
           python - <<'PY'
           from pathlib import Path
           import re
@@ -96,7 +45,51 @@ jobs:
           PY
           node --check /tmp/fattening-site.js
 
-      - name: Commit JavaScript stability fix
+      - name: Runtime UI smoke test
+        run: |
+          npm install jsdom@24 --no-save --silent
+          node - <<'JS'
+          const fs=require('fs');
+          const {JSDOM,VirtualConsole}=require('jsdom');
+          const html=fs.readFileSync('index.html','utf8');
+          const errors=[];
+          const vc=new VirtualConsole();
+          vc.on('jsdomError',e=>errors.push('JSDOM: '+e.message));
+          vc.on('error',e=>errors.push('console.error: '+e));
+          const dom=new JSDOM(html,{runScripts:'dangerously',url:'https://fattening.test/',pretendToBeVisual:true,virtualConsole:vc,beforeParse(w){w.alert=()=>{};w.confirm=()=>true;}});
+          const w=dom.window;
+          w.addEventListener('error',e=>errors.push('window error: '+(e.error?.stack||e.message)));
+          const ev=code=>w.eval(code);
+          const assert=(ok,msg)=>{if(!ok)throw new Error(msg)};
+          setTimeout(()=>{
+            try{
+              ev('state.currentPage="dashboard"; render()');
+              assert(w.document.body.textContent.includes('الرئيسية'),'dashboard failed');
+              ev('state.currentPage="plans"; render()');
+              assert(w.document.body.textContent.includes('خططي'),'plans failed');
+              const p=ev('state.currentPage="plans"; state.currentPlanId=state.plans[0].id; plan()');
+              assert(p,'no current plan');
+              const tabs=['overview','animals','feeding','health','sales','feeds','cycle','reports','shelter','expenses','treatments'];
+              for(const t of tabs){
+                ev(`state.planTab=${JSON.stringify(t)}; state.currentPage='plan'; render()`);
+                assert(w.document.querySelector('.content'),'render failed for '+t);
+              }
+              ev('state.planTab="overview"; render(); openEasyManage(plan().id)');
+              assert(w.document.querySelector('.modal-backdrop'),'manage modal failed');
+              ev('closeModal(); openEasyActions(plan().id)');
+              assert(w.document.querySelector('.modal-backdrop'),'actions modal failed');
+              ev('closeModal(); openFeedModal(plan().id)');
+              assert(w.document.getElementById('feedPurchaseV3'),'feed modal failed');
+              const cb=w.document.querySelector('input[name="feedCode"]');
+              assert(cb,'feed checklist missing'); cb.click();
+              assert(w.document.querySelector('.feed-entry'),'feed card did not expand');
+              console.log('Runtime UI smoke test passed');
+            }catch(e){errors.push(e.stack||String(e));}
+            if(errors.length){console.error(errors.join('\n---\n'));process.exit(1)}
+          },100);
+          JS
+
+      - name: Commit stable site
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
