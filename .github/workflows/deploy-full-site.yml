@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Assemble lecture 4 site
-        run: cat .deploy/lecture4-large*.b64 | tr -d '\n' | base64 -d | gunzip > index.html
+        run: cat .deploy/lecture4-fix01a.b64 .deploy/lecture4-fix01b.b64 .deploy/lecture4-large02.b64 .deploy/lecture4-large03.b64 .deploy/lecture4-large04.b64 .deploy/lecture4-large05.b64 .deploy/lecture4-large06.b64 | tr -d '\n' | base64 -d | gunzip > index.html
 
       - name: Verify lecture 1 to 4 features
         run: |
