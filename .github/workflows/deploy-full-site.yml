@@ -43,7 +43,7 @@ jobs:
       - name: Apply feed checklist currency cards and visual redesign
         run: |
           cat .deploy/feed-ui-v3-01.b64 .deploy/feed-ui-v3-02.b64 | tr -d '\n' | base64 -d | gunzip > /tmp/apply-feed-ui-v3.py
-          echo "dd097cf2e1ac4f47615a8ecd78de793531c4beb5e7b886a3c1a1d65414ea3071  /tmp/apply-feed-ui-v3.py" | sha256sum -c -
+          echo "c12f9af2ba9333cdbd8e344a5f7bd08c86845956ed0a69f916493534d2f0f810  /tmp/apply-feed-ui-v3.py" | sha256sum -c -
           python /tmp/apply-feed-ui-v3.py index.html
 
       - name: Verify lectures and redesigned UX
@@ -83,6 +83,8 @@ jobs:
           grep -q "window.uiIcon" index.html
           grep -q "ريال سعودي" index.html
           grep -q "دولار أمريكي" index.html
+          ! grep -q "const _planPageV3=window.planPage" index.html
+          ! grep -q "const _dashboardV3=window.dashboard" index.html
           test "$(wc -c < index.html)" -gt 270000
           python - <<'PY'
           from pathlib import Path
@@ -94,11 +96,11 @@ jobs:
           PY
           node --check /tmp/fattening-site.js
 
-      - name: Commit redesigned site
+      - name: Commit JavaScript stability fix
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Improve feed purchasing and visual design"
+          git commit -m "Fix JavaScript runtime and navigation state"
           git push
