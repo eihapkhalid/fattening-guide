@@ -1,4 +1,4 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#174a3a"><title>إدارة التسمين — النسخة المحسنة</title><style>:root{
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#174a3a"><title>إدارة التسمين — النسخة المحسنة</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet"><style>:root{
   --bg:#f5f7f5;--surface:#fff;--surface-2:#f8faf8;--text:#17221d;--muted:#66736d;
   --primary:#174a3a;--primary-2:#24624f;--primary-soft:#e9f3ef;--accent:#b9843d;--danger:#b94141;
   --warning:#b46c16;--success:#277a55;--border:#dfe7e2;--shadow:0 10px 32px rgba(23,74,58,.08);
@@ -59,6 +59,55 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:
 .ez-app .plan-summary{padding:18px}.ez-app .plan-summary .kpis{display:none}.ez-app .plan-summary .row{align-items:center}.ez-app .plan-summary p{font-size:12px}.ez-app .tabs{background:#eef3f0}.ez-app .tab{font-size:13px;flex:1;text-align:center}.ez-app .source-note,.ez-app .form-help{font-size:10px}
 @media(max-width:900px){.ez-setup{grid-template-columns:repeat(2,1fr)}.ez-plan-card{grid-template-columns:1fr}.ez-simple-stats{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:620px){.ez-setup,.ez-action-grid,.ez-choice{grid-template-columns:1fr}.ez-simple-stats{grid-template-columns:1fr 1fr}.ez-primary-step h2{font-size:20px}.ez-today-task{align-items:flex-start}.ez-today-task .btn{padding:8px 10px}.ez-app .tabs .tab{padding:9px 8px;font-size:12px}.ez-app .topbar-sub{display:none}}
+
+
+/* FEED_CURRENCY_CARDS_V3 — professional visual system */
+:root{
+  --bg:#f7f6f2;--surface:#ffffff;--surface-2:#f1f3ef;--text:#1f2a25;--muted:#6d7772;
+  --primary:#204a3d;--primary-2:#315f50;--primary-soft:#e9f1ed;--accent:#ad7430;
+  --danger:#b64343;--warning:#a7681f;--success:#2e7456;--border:#dce1dc;
+  --shadow:0 3px 12px rgba(32,74,61,.055);--radius:14px;--radius-sm:10px;
+}
+html,body,button,input,select,textarea{font-family:"IBM Plex Sans Arabic",Tahoma,Arial,sans-serif}
+body{letter-spacing:0;background:var(--bg)}
+.sidebar{background:#173d33;box-shadow:none}
+.brand-badge{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);font-size:0;border-radius:10px}
+.card,.metric,.plan-card,.ez-plan-card{box-shadow:var(--shadow);border-color:var(--border)}
+.card,.metric,.plan-card{border-radius:14px}.plan-summary{background:#204a3d;border-radius:16px;box-shadow:none}
+.metric.hero{background:#204a3d}.btn{border-radius:9px;box-shadow:none;transition:background .15s,border-color .15s,color .15s}.btn:hover{transform:none}
+.btn.primary{background:#204a3d;border-color:#204a3d}.btn.primary:hover{background:#183c31}
+.tabs{background:#ecefea;border-radius:10px;padding:4px}.tab{border-radius:7px}.tab.active{box-shadow:none;border:1px solid var(--border)}
+.topbar{box-shadow:none;background:rgba(255,255,255,.96)}
+.ui-icon{width:1.15em;height:1.15em;display:inline-block;vertical-align:-.2em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+.ui-icon.lg{width:24px;height:24px}.ui-icon.xl{width:32px;height:32px}
+.icon-button-label{display:inline-flex;align-items:center;gap:7px}.nav-btn .ui-icon{width:19px;height:19px}.brand-badge .ui-icon{width:23px;height:23px}
+.empty-icon{width:48px;height:48px;border-radius:12px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;margin:0 auto 10px}
+.ux-icon-btn{display:inline-flex;align-items:center;gap:6px}
+
+.fx-panel{display:grid;grid-template-columns:1.2fr 1fr 1fr auto;gap:10px;align-items:end;background:#f2f4f0;border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px}
+.fx-panel .field label{font-size:11px}.fx-note{font-size:11px;color:var(--muted);line-height:1.7}
+.feed-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.feed-stock-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.feed-stock-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;overflow:hidden;box-shadow:0 2px 9px rgba(32,74,61,.04)}
+.feed-stock-card[open]{border-color:#b9c9c0;box-shadow:0 5px 16px rgba(32,74,61,.07)}
+.feed-stock-card summary{list-style:none;cursor:pointer;padding:15px;display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center}
+.feed-stock-card summary::-webkit-details-marker{display:none}.feed-stock-card summary:after{content:'+';font-size:20px;color:var(--muted);font-weight:400}.feed-stock-card[open] summary:after{content:'−'}
+.feed-symbol{width:38px;height:38px;border-radius:10px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center}
+.feed-stock-card h4{margin:0 0 3px;font-size:14px}.feed-stock-meta{font-size:11px;color:var(--muted)}
+.feed-stock-price{text-align:left}.feed-stock-price strong{display:block;font-size:13px}.feed-stock-price small{color:var(--muted);font-size:10px}
+.feed-stock-body{border-top:1px solid var(--border);background:#fafbf9;padding:13px 15px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.feed-kv{background:white;border:1px solid #e5e8e4;border-radius:9px;padding:9px}.feed-kv span{display:block;color:var(--muted);font-size:10px;margin-bottom:4px}.feed-kv strong{font-size:12px}
+.feed-empty{border:1px dashed #cdd5d0;border-radius:13px;padding:28px;text-align:center;color:var(--muted)}
+
+.feed-catalog-groups{display:grid;gap:13px}.feed-catalog-section{border-top:1px solid var(--border);padding-top:12px}.feed-catalog-section:first-child{border-top:0;padding-top:0}
+.feed-catalog-section h4{margin:0 0 9px;font-size:13px}.feed-picker-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.feed-pick{display:flex;align-items:center;gap:10px;border:1px solid var(--border);background:white;border-radius:11px;padding:10px 11px;cursor:pointer;transition:.15s}
+.feed-pick:hover{border-color:#afc2b8}.feed-pick:has(input:checked){background:var(--primary-soft);border-color:#aac2b7}.feed-pick input{accent-color:var(--primary);width:17px;height:17px}.feed-pick .feed-symbol{width:32px;height:32px;border-radius:8px}.feed-pick strong{font-size:12px;line-height:1.5}.feed-pick small{display:block;color:var(--muted);font-size:10px}
+.feed-selected-list{display:grid;gap:10px;margin-top:14px}.feed-entry{border:1px solid var(--border);border-radius:12px;padding:13px;background:#fbfcfa}.feed-entry-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.feed-entry-head strong{font-size:13px}.feed-entry .form-grid{grid-template-columns:1.1fr 1fr .8fr}.conversion-preview{font-size:11px;color:var(--primary);font-weight:600;margin-top:5px;min-height:18px}
+.currency-chip{display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:999px;padding:4px 8px;font-size:10px;color:var(--muted);background:white}
+
+@media(max-width:1050px){.feed-stock-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.fx-panel{grid-template-columns:1fr 1fr}.fx-panel .fx-note{grid-column:1/-1}}
+@media(max-width:720px){.feed-stock-grid,.feed-picker-grid{grid-template-columns:1fr}.fx-panel{grid-template-columns:1fr}.feed-entry .form-grid{grid-template-columns:1fr}.feed-stock-body{grid-template-columns:1fr}.content{padding:18px}.plan-summary{padding:17px}}
 
 </style></head><body><div id="app"></div><script>const fmt = n => new Intl.NumberFormat('ar-SD').format(Math.round(Number(n)||0));
 const pct = n => `${Number(n||0).toFixed(1)}%`;
@@ -820,6 +869,121 @@ render();
   const _plansPage=window.plansPage;
   window.plansPage=function(){if(state.role==='admin')return _plansPage();const ps=state.plans.filter(p=>p.clientId===state.currentClientId);return layout(`<div class="page-head"><div><h2>خططي</h2><p>اختر الخطة التي تعمل عليها.</p></div><button class="btn primary" onclick="openPlanModal()">+ خطة جديدة</button></div><div class="ez-plan-list">${ps.map(p=>{const n=ezNext(p);return `<div class="ez-plan-card"><div><h3>${p.name}</h3><div class="small muted">${statusBadge(p.status)} • اليوم ${ezDay(p)}</div></div><div class="next"><span>التالي</span><strong>${n.title}</strong></div><button class="btn primary" onclick="openPlan('${p.id}')">فتح</button></div>`}).join('')||empty('لا توجد خطط بعد.')}</div>`,'خططي','كل خطة لها خطوة تالية واضحة')}
 })();
+
+// FEED_CURRENCY_CARDS_V3
+(function(){
+  const FEED_CATALOG_V3=[
+    {code:'sorghum',name:'فتريتة مدروشة',category:'concentrate',group:'مركزات ومكونات الخلطة'},
+    {code:'peanut_cake',name:'أمباز فول سوداني',category:'concentrate',group:'مركزات ومكونات الخلطة'},
+    {code:'sesame_cake',name:'أمباز سمسم',category:'concentrate',group:'مركزات ومكونات الخلطة'},
+    {code:'wheat_bran',name:'ردة قمح',category:'concentrate',group:'مركزات ومكونات الخلطة'},
+    {code:'sesame_straw',name:'تبن السمسم',category:'roughage',group:'المالئات والألياف'},
+    {code:'peanut_straw',name:'قش / قشور الفول السوداني',category:'roughage',group:'المالئات والألياف'},
+    {code:'alfalfa_dry',name:'برسيم مجفف أو مكعبات برسيم',category:'roughage',group:'المالئات والألياف'},
+    {code:'rhodes',name:'رودس مجفف',category:'roughage',group:'المالئات والألياف'},
+    {code:'rice_straw',name:'قش الأرز',category:'roughage',group:'المالئات والألياف'},
+    {code:'lentil_straw',name:'تبن العدس',category:'roughage',group:'المالئات والألياف'},
+    {code:'sorghum_residue',name:'مخلفات السورغم',category:'roughage',group:'المالئات والألياف'},
+    {code:'bagasse',name:'مصاصة / باجاس',category:'roughage',group:'المالئات والألياف'},
+    {code:'minerals',name:'أملاح معدنية وفيتامينات',category:'other',group:'الإضافات والتشطيب'},
+    {code:'limestone',name:'جير مطفي مخصص للأعلاف',category:'other',group:'الإضافات والتشطيب'},
+    {code:'bicarbonate',name:'بيكربونات الصوديوم',category:'other',group:'الإضافات والتشطيب'},
+    {code:'salt',name:'ملح طعام',category:'other',group:'الإضافات والتشطيب'},
+    {code:'toxin_binder',name:'رابط سموم فطرية',category:'other',group:'الإضافات والتشطيب'},
+    {code:'dry_bread',name:'عيش ناشف',category:'other',group:'الإضافات والتشطيب'},
+    {code:'molasses',name:'مولاس',category:'other',group:'الإضافات والتشطيب'},
+    {code:'azolla_dry',name:'أزولا جافة',category:'other',group:'الإضافات والتشطيب'},
+    {code:'azolla_fresh',name:'أزولا طازجة',category:'other',group:'الإضافات والتشطيب'}
+  ];
+  window.FEED_CATALOG_V3=FEED_CATALOG_V3;
+
+  if(!state.fxRates)state.fxRates={SARtoSDG:0,USDtoSDG:0,updatedAt:''};
+  state.feeds.forEach(f=>{
+    if(!f.currency)f.currency='SDG';
+    if(f.originalUnitCost==null)f.originalUnitCost=Number(f.unitCost)||0;
+    if(f.fxRate==null)f.fxRate=f.currency==='SDG'?1:0;
+  });
+
+  window.uiIcon=function(name,size=20){
+    const p={
+      home:'<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h5v-5h3v5h5v-9.5"/>',
+      plans:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5V3h6v1.5M8.5 9h7M8.5 13h7M8.5 17h4"/>',
+      users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+      settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21h-4v-.08A1.7 1.7 0 0 0 9 19.37a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.63 15 1.7 1.7 0 0 0 3.08 14H3v-4h.08A1.7 1.7 0 0 0 4.63 9a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.63 1.7 1.7 0 0 0 10 3.08V3h4v.08A1.7 1.7 0 0 0 15 4.63a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.37 9 1.7 1.7 0 0 0 20.92 10H21v4h-.08A1.7 1.7 0 0 0 19.4 15z"/>',
+      plus:'<path d="M12 5v14M5 12h14"/>',
+      arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+      menu:'<path d="M4 7h16M4 12h16M4 17h16"/>',
+      help:'<circle cx="12" cy="12" r="9"/><path d="M9.8 9a2.4 2.4 0 1 1 3.7 2c-1 .6-1.5 1-1.5 2M12 17h.01"/>',
+      leaf:'<path d="M20 4c-7 0-12 3.5-12 9 0 3 2 5 5 5 5.5 0 9-5 7-14z"/><path d="M4 21c2-6 7-10 13-13"/>',
+      feed:'<path d="M4 19c5-8 9-11 16-14M7 16c-2-1-3-3-3-5 3 0 5 1 6 3M12 11c-1-3 0-5 2-7 2 2 3 4 2 6"/>',
+      health:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/><path d="M8 12h2l1-2 2 4 1-2h2"/>',
+      sale:'<path d="M20 12l-8 8-8-8V4h8z"/><circle cx="8" cy="8" r="1"/>',
+      animal:'<circle cx="8" cy="8" r="2"/><circle cx="16" cy="8" r="2"/><circle cx="6" cy="14" r="2"/><circle cx="18" cy="14" r="2"/><path d="M12 12c-3 0-5 2.2-5 4.5S9 20 12 20s5-1.2 5-3.5S15 12 12 12z"/>',
+      money:'<circle cx="12" cy="12" r="9"/><path d="M16 8.5c-.8-.8-2-1.2-3.4-1.2-1.8 0-3.1.9-3.1 2.2 0 3.5 6.6 1.5 6.6 5 0 1.4-1.4 2.3-3.3 2.3-1.5 0-2.9-.5-3.8-1.4M12 5.5v13"/>',
+      chevron:'<path d="m9 18 6-6-6-6"/>',
+      check:'<path d="m5 12 4 4L19 6"/>'
+    }[name]||'<circle cx="12" cy="12" r="9"/>';
+    return `<svg class="ui-icon" width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
+  };
+
+  function currencyLabelV3(c){return c==='SAR'?'ريال سعودي':c==='USD'?'دولار أمريكي':'جنيه سوداني'}
+  function currencyShortV3(c){return c==='SAR'?'ر.س':c==='USD'?'دولار':'ج.س'}
+  function fxRateV3(c){return c==='SAR'?Number(state.fxRates.SARtoSDG)||0:c==='USD'?Number(state.fxRates.USDtoSDG)||0:1}
+  function moneyV3(v,c='SDG'){const n=Number(v)||0;return `${new Intl.NumberFormat('ar-SD',{maximumFractionDigits:2}).format(n)} ${currencyShortV3(c)}`}
+  function feedCatV3(c){return c==='concentrate'?'مركز':c==='roughage'?'مالئ':'إضافة / تشطيب'}
+  function feedIconV3(c){return c==='roughage'?'leaf':'feed'}
+  function feedLookupV3(code){return FEED_CATALOG_V3.find(x=>x.code===code)}
+
+  window.saveFxRatesV3=function(ev){ev.preventDefault();const f=new FormData(ev.target),sar=Number(f.get('sarRate'))||0,usd=Number(f.get('usdRate'))||0;if(sar<=0){alert('أدخل سعر صرف الريال مقابل الجنيه السوداني. مثال الصيغة: 1 ريال = عدد من الجنيهات السودانية.');return}state.fxRates={SARtoSDG:sar,USDtoSDG:usd,updatedAt:today()};save();render()}
+
+  window.feedsTab=function(p){
+    const fs=planFeeds(p.id),purchased=fs.reduce((z,f)=>z+(Number(f.qtyKg)||0)*(Number(f.unitCost)||0),0),used=fs.reduce((z,f)=>z+(Number(f.usedKg)||0)*(Number(f.unitCost)||0),0),remaining=purchased-used;
+    const rates=state.fxRates||{};
+    const cards=fs.map(f=>{const left=Math.max(0,(Number(f.qtyKg)||0)-(Number(f.usedKg)||0)),orig=f.originalUnitCost!=null?f.originalUnitCost:f.unitCost,curr=f.currency||'SDG',rate=f.fxRate||1;return `<details class="feed-stock-card"><summary><span class="feed-symbol">${uiIcon(feedIconV3(f.category),18)}</span><span><h4>${f.name}</h4><span class="feed-stock-meta">${feedCatV3(f.category)} • متبقي ${left.toFixed(1)} كجم</span></span><span class="feed-stock-price"><strong>${moneyV3(orig,curr)}/كجم</strong><small>${curr==='SDG'?'السعر الأساسي':`≈ ${moneyV3(f.unitCost,'SDG')}/كجم`}</small></span></summary><div class="feed-stock-body"><div class="feed-kv"><span>الكمية المشتراة</span><strong>${Number(f.qtyKg).toFixed(1)} كجم</strong></div><div class="feed-kv"><span>المستهلك</span><strong>${Number(f.usedKg||0).toFixed(1)} كجم</strong></div><div class="feed-kv"><span>سعر الصرف المستخدم</span><strong>${curr==='SDG'?'—':`1 ${currencyShortV3(curr)} = ${moneyV3(rate,'SDG')}`}</strong></div><div class="feed-kv"><span>تكلفة المستهلك بالجنيه</span><strong>${moneyV3((Number(f.usedKg)||0)*(Number(f.unitCost)||0),'SDG')}</strong></div><div class="feed-kv"><span>تاريخ الشراء</span><strong>${f.purchased||'-'}</strong></div><div class="feed-kv"><span>الجودة الظاهرة</span><strong>${f.qualityOk===true?'جاف ولا عفن ظاهر':f.qualityOk===false?'يحتاج مراجعة':'غير مفحوص'}</strong></div></div></details>`}).join('');
+    return `<div class="card"><div class="feed-toolbar"><div><h3 style="margin:0">الأعلاف والأسعار</h3><div class="small muted">الأسعار المالية داخل الحسابات تُوحّد بالجنيه السوداني، مع الاحتفاظ بالسعر الأصلي وعملة الشراء.</div></div><button class="btn primary" onclick="openFeedModal('${p.id}')"><span class="icon-button-label">${uiIcon('plus',17)} إضافة أعلاف</span></button></div><form class="fx-panel" onsubmit="saveFxRatesV3(event)"><div class="fx-note"><strong>سعر الصرف اليدوي</strong><br>لأن سعر الصرف يتغير، أدخله أنت ويستخدمه النظام في التحويل. لا يتم جلب سعر تلقائي من الإنترنت.</div><div class="field"><label>1 ريال سعودي = كم جنيه سوداني؟</label><input name="sarRate" type="number" min="0" step=".01" value="${rates.SARtoSDG||''}" placeholder="أدخل السعر" required></div><div class="field"><label>1 دولار = كم جنيه سوداني؟</label><input name="usdRate" type="number" min="0" step=".01" value="${rates.USDtoSDG||''}" placeholder="اختياري حتى تستخدم الدولار"></div><button class="btn" type="submit">حفظ الصرف</button></form><div class="grid metrics ux-compact-metrics"><div class="metric"><div class="label">قيمة المشتريات</div><div class="value">${moneyV3(purchased,'SDG')}</div></div><div class="metric"><div class="label">العلف المستهلك</div><div class="value">${moneyV3(used,'SDG')}</div></div><div class="metric"><div class="label">قيمة المخزون المتبقي</div><div class="value">${moneyV3(remaining,'SDG')}</div></div><div class="metric"><div class="label">أصناف مسجلة</div><div class="value">${fs.length}</div></div></div><div style="margin-top:14px">${cards?`<div class="feed-stock-grid">${cards}</div>`:`<div class="feed-empty">${uiIcon('feed',28)}<div style="margin-top:7px">لا توجد أعلاف في المخزون بعد. اضغط «إضافة أعلاف» واخترها من القائمة.</div></div>`}</div></div>`;
+  };
+
+  function catalogHtmlV3(){const groups=[...new Set(FEED_CATALOG_V3.map(x=>x.group))];return groups.map(g=>`<div class="feed-catalog-section"><h4>${g}</h4><div class="feed-picker-grid">${FEED_CATALOG_V3.filter(x=>x.group===g).map(x=>`<label class="feed-pick"><input type="checkbox" name="feedCode" value="${x.code}" onchange="toggleFeedPurchaseV3('${x.code}',this.checked)"><span class="feed-symbol">${uiIcon(feedIconV3(x.category),17)}</span><span><strong>${x.name}</strong><small>${feedCatV3(x.category)}</small></span></label>`).join('')}</div></div>`).join('')}
+
+  window.openFeedModal=function(pid){const r=state.fxRates||{};modal(`<div class="modal-head"><div><h3>إضافة أعلاف للمخزون</h3><div class="small muted">1) اختر الأعلاف من القائمة  2) أدخل الكمية والسعر  3) احفظ.</div></div><button class="close" onclick="closeModal()">×</button></div><div class="ez-modal-intro"><strong>العملات المتاحة:</strong> جنيه سوداني، ريال سعودي، دولار. ${r.SARtoSDG?`سعر الريال المحفوظ: 1 ر.س = ${moneyV3(r.SARtoSDG,'SDG')}`:'لم تسجل سعر صرف الريال بعد.'}</div><form id="feedPurchaseV3" onsubmit="createFeedChecklistV3(event,'${pid}')" oninput="updateFeedPurchasePreviewV3()"><div class="feed-catalog-groups">${catalogHtmlV3()}</div><div id="feedSelectedV3" class="feed-selected-list"></div><div class="selection-box"><h4>فحص ظاهر للأعلاف المختارة</h4><div class="check-grid"><label class="check-item"><input type="checkbox" name="cleanDry">جافة ونظيفة ولا يوجد بلل أو رائحة منفرة ظاهرة</label><label class="check-item"><input type="checkbox" name="noMold">لا توجد علامات عفن ظاهرة</label></div></div><div class="field" style="margin-top:12px"><label>تاريخ الشراء</label><input name="date" type="date" value="${today()}" required></div><div class="modal-actions"><button type="button" class="btn" onclick="closeModal()">إلغاء</button><button class="btn primary"><span class="icon-button-label">${uiIcon('check',17)} حفظ الأعلاف المختارة</span></button></div></form>`)};
+
+  window.toggleFeedPurchaseV3=function(code,checked){const box=document.getElementById('feedSelectedV3'),x=feedLookupV3(code);if(!box||!x)return;const old=document.getElementById('feedEntry_'+code);if(!checked){if(old)old.remove();return}if(old)return;box.insertAdjacentHTML('beforeend',`<div class="feed-entry" id="feedEntry_${code}"><div class="feed-entry-head"><strong>${x.name}</strong><span class="currency-chip">${feedCatV3(x.category)}</span></div><div class="form-grid"><div class="field"><label>الكمية — كجم</label><input name="qty_${code}" type="number" min="0.001" step=".001" required></div><div class="field"><label>سعر الكيلو</label><input name="cost_${code}" type="number" min="0" step=".01" required></div><div class="field"><label>العملة</label><select name="currency_${code}" required><option value="SDG">جنيه سوداني</option><option value="SAR">ريال سعودي</option><option value="USD">دولار</option></select><div class="conversion-preview" id="preview_${code}"></div></div></div></div>`);updateFeedPurchasePreviewV3()};
+
+  window.updateFeedPurchasePreviewV3=function(){const form=document.getElementById('feedPurchaseV3');if(!form)return;form.querySelectorAll('input[name="feedCode"]:checked').forEach(cb=>{const code=cb.value,curr=form.elements['currency_'+code]?.value||'SDG',cost=Number(form.elements['cost_'+code]?.value)||0,rate=fxRateV3(curr),p=document.getElementById('preview_'+code);if(!p)return;if(curr!=='SDG'&&!rate){p.textContent=`أدخل سعر صرف ${currencyLabelV3(curr)} من شاشة الأعلاف أولًا`;p.style.color='var(--danger)'}else{p.textContent=cost?`≈ ${moneyV3(cost*rate,'SDG')} لكل كجم`:' ';p.style.color='var(--primary)'}})};
+
+  window.createFeedChecklistV3=function(ev,pid){ev.preventDefault();const form=ev.target,f=new FormData(form),codes=f.getAll('feedCode');if(!codes.length){alert('اختر علفًا واحدًا على الأقل من القائمة.');return}const quality=!!f.get('cleanDry')&&!!f.get('noMold'),date=f.get('date')||today(),items=[];for(const code of codes){const x=feedLookupV3(code),qty=Number(f.get('qty_'+code))||0,cost=Number(f.get('cost_'+code))||0,curr=f.get('currency_'+code)||'SDG',rate=fxRateV3(curr);if(!x||qty<=0){alert('أدخل كمية صحيحة لكل علف اخترته.');return}if(curr!=='SDG'&&rate<=0){alert(`لا يوجد سعر صرف محفوظ لـ ${currencyLabelV3(curr)}. احفظ سعر الصرف من شاشة الأعلاف أولًا.`);return}items.push({x,qty,cost,curr,rate})}for(const it of items){state.feeds.push({id:uid('f'),planId:pid,name:it.x.name,catalogCode:it.x.code,category:it.x.category,qtyKg:it.qty,usedKg:0,originalUnitCost:it.cost,currency:it.curr,fxRate:it.rate,unitCost:it.cost*it.rate,purchased:date,qualityOk:quality})}save();closeModal();state.planTab='feeds';render();if(!quality)setTimeout(()=>alert('تم حفظ الأعلاف، لكنها ستظهر بحاجة لمراجعة الجودة حتى تؤكد الجفاف وعدم وجود عفن ظاهر.'),0)};
+
+  const _feedingV3=window.feedingTab;
+  if(_feedingV3)window.feedingTab=function(p){return _feedingV3(p).replace(/مخزون الأعلاف/g,'الأعلاف والأسعار')};
+
+  window.openEasyActions=function(pid){modal(`<div class="modal-head"><div><h3>إجراء آخر</h3><div class="small muted">اختر ما تريد عمله الآن.</div></div><button class="close" onclick="closeModal()">×</button></div><div class="ux-more-grid"><div class="ux-more-card"><h3><span class="icon-button-label">${uiIcon('animal',18)} إضافة حيوان</span></h3><p>إضافة حيوان جديد بعد فحصه.</p><button class="btn" onclick="closeModal();openAnimalModal('${pid}')">فتح</button></div><div class="ux-more-card"><h3><span class="icon-button-label">${uiIcon('feed',18)} إضافة أعلاف</span></h3><p>اختر الأعلاف من القائمة وأدخل الأسعار.</p><button class="btn" onclick="closeModal();openFeedModal('${pid}')">فتح</button></div><div class="ux-more-card"><h3><span class="icon-button-label">${uiIcon('health',18)} علاج أو طوارئ</span></h3><p>تسجيل علاج أو فتح التدخل السريع.</p><button class="btn" onclick="closeModal();setTab('health')">فتح الصحة</button></div><div class="ux-more-card"><h3><span class="icon-button-label">${uiIcon('money',18)} مصروف</span></h3><p>تسجيل مصروف فعلي للدورة.</p><button class="btn" onclick="closeModal();openExpenseModal('${pid}')">تسجيل</button></div></div>`)};
+  window.openUxActions=window.openEasyActions;
+
+  window.openEasyManage=function(pid){modal(`<div class="modal-head"><div><h3>إعدادات الخطة</h3><div class="small muted">هذه الخيارات لا تحتاجها كل يوم.</div></div><button class="close" onclick="closeModal()">×</button></div><div class="ux-more-grid"><div class="ux-more-card"><h3>${uiIcon('feed',18)} الأعلاف والأسعار</h3><p>المخزون، العملات وسعر الصرف.</p><button class="btn" onclick="closeModal();setTab('feeds')">فتح</button></div><div class="ux-more-card"><h3>${uiIcon('plans',18)} خطة الدورة</h3><p>مراحل 90–120 يومًا.</p><button class="btn" onclick="closeModal();setTab('cycle')">فتح</button></div><div class="ux-more-card"><h3>${uiIcon('money',18)} المصروفات والتقارير</h3><p>المصاريف ودراسة الجدوى.</p><button class="btn" onclick="closeModal();setTab('reports')">فتح</button></div><div class="ux-more-card"><h3>${uiIcon('settings',18)} تجهيز الزريبة</h3><p>بيانات الزريبة والتجهيز.</p><button class="btn" onclick="closeModal();setTab('shelter')">فتح</button></div></div>`)};
+
+  window.layout=function(body,title,sub=''){
+    const navClient=[['dashboard','home','الرئيسية'],['plans','plans','خططي']];
+    const navAdmin=[['dashboard','home','لوحة الإدارة'],['clients','users','العملاء'],['plans','plans','الخطط']];
+    const nav=state.role==='admin'?navAdmin:navClient;
+    return `<div class="app ux-app ez-app ${state.uxGuidance?'ux-show-guidance':''}"><div class="sidebar-backdrop" onclick="closeMenu()"></div><aside class="sidebar"><div class="brand"><div class="brand-badge">${uiIcon('leaf',22)}</div><div><h1>إدارة التسمين</h1><p>إدارة واضحة خطوة بخطوة</p></div></div><div class="nav-section">التنقل</div>${nav.map(n=>`<button class="nav-btn ${state.currentPage===n[0]?'active':''}" onclick="route('${n[0]}')">${uiIcon(n[1],19)}<span>${n[2]}</span></button>`).join('')}</aside><main class="main"><header class="topbar"><div style="display:flex;align-items:center;gap:12px"><button class="mobile-toggle" onclick="toggleMenu()" aria-label="القائمة">${uiIcon('menu',22)}</button><div><div class="topbar-title">${title}</div><div class="topbar-sub">${sub}</div></div></div><div class="top-actions"><button class="ux-icon-btn" onclick="toggleUxGuidance()">${uiIcon('help',17)}<span class="ux-guidance-label">${state.uxGuidance?'إخفاء الشرح':'شرح'}</span></button>${state.role==='admin'?`<button class="ux-icon-btn" onclick="setRole('client')">عرض العميل</button>`:`<button class="ux-icon-btn" onclick="setRole('admin')" title="خاص بالنسخة التجريبية">${uiIcon('settings',16)} إدارة</button>`}<div class="avatar">${state.role==='admin'?'A':client().name[0]}</div></div></header><section class="content">${body}</section></main></div>`;
+  };
+
+  const _planPageV3=window.planPage;
+  window.planPage=function(){const p=plan();if(!p)return plansPage();const s=stats(p),n=ezNext(p);const nav=['shelter','feeds','treatments','expenses','reports','cycle','daily','more'].includes(state.planTab)?'overview':(state.planTab||'overview');const tabs=[['overview','اليوم'],['animals','الحيوانات'],['feeding','العلف'],['health','الصحة'],['sales','البيع']];const head=`<div class="plan-summary"><div class="row"><div><div style="margin-bottom:7px">${statusBadge(p.status)} <span class="badge">اليوم ${ezDay(p)} • ${ezPhase(p)}</span></div><h2>${p.name}</h2><p>${state.clients.find(c=>c.id===p.clientId)?.name||''}</p></div><div class="actions"><button class="btn primary" onclick="ezRunNext('${p.id}')"><span class="icon-button-label">${uiIcon('arrow',17)} ${n.button}</span></button><button class="btn" onclick="openEasyManage('${p.id}')" aria-label="إعدادات الخطة">${uiIcon('settings',18)}</button></div></div></div><div class="tabs">${tabs.map(t=>`<button class="tab ${nav===t[0]?'active':''}" onclick="setTab('${t[0]}')">${t[1]}</button>`).join('')}</div>`;return layout(head+tabContent(p,s),p.name,'نفّذ الخطوة التالية ثم ارجع لليوم')};
+
+  const _overviewV3=window.overviewTab;
+  if(_overviewV3)window.overviewTab=function(p,s){return _overviewV3(p,s).replace('<div class="emoji">🐄</div>',`<div class="empty-icon">${uiIcon('animal',28)}</div>`).replace(/حدث آخر/g,'إجراء آخر')};
+
+  const _dashboardV3=window.dashboard;
+  window.dashboard=function(){if(state.role==='admin')return adminDashboard();const ps=state.plans.filter(p=>p.clientId===state.currentClientId),active=ps.filter(p=>p.status==='active'||p.status==='selling');const body=`<div class="page-head"><div><h2>ماذا تريد أن تفعل اليوم؟</h2><p>افتح خطتك وسيظهر لك الإجراء التالي مباشرة.</p></div><button class="btn primary" onclick="openPlanModal()"><span class="icon-button-label">${uiIcon('plus',17)} إنشاء خطة</span></button></div>${active.length?`<div class="card"><h3>الخطط النشطة</h3><div class="ez-plan-list">${active.map(p=>{const n=ezNext(p);return `<div class="ez-plan-card"><div><h3>${p.name}</h3><div class="small muted">اليوم ${ezDay(p)} • ${ezPhase(p)}</div></div><div class="next"><span>الخطوة التالية</span><strong>${n.title}</strong></div><div class="actions"><button class="btn primary small" onclick="openPlan('${p.id}');setTimeout(()=>ezRunNext('${p.id}'),0)"><span class="icon-button-label">${uiIcon('arrow',15)} ابدأ</span></button><button class="btn small" onclick="openPlan('${p.id}')">فتح الخطة</button></div></div>`}).join('')}</div></div>`:`<div class="ez-primary-step"><div class="eyebrow">لا توجد خطة نشطة</div><h2>أنشئ أول خطة تسمين</h2><p>بعدها سيقودك النظام خطوة بخطوة.</p><button class="btn" onclick="openPlanModal()"><span class="icon-button-label">${uiIcon('plus',16)} إنشاء الخطة</span></button></div>`}`;return layout(body,'الرئيسية','واجهة بسيطة للمهام اليومية')};
+
+  const _plansV3=window.plansPage;
+  window.plansPage=function(){if(state.role==='admin')return _plansV3();const ps=state.plans.filter(p=>p.clientId===state.currentClientId);return layout(`<div class="page-head"><div><h2>خططي</h2><p>اختر الخطة التي تعمل عليها.</p></div><button class="btn primary" onclick="openPlanModal()"><span class="icon-button-label">${uiIcon('plus',17)} خطة جديدة</span></button></div><div class="ez-plan-list">${ps.map(p=>{const n=ezNext(p);return `<div class="ez-plan-card"><div><h3>${p.name}</h3><div class="small muted">${statusBadge(p.status)} • اليوم ${ezDay(p)}</div></div><div class="next"><span>التالي</span><strong>${n.title}</strong></div><button class="btn primary" onclick="openPlan('${p.id}')">فتح</button></div>`}).join('')||empty('لا توجد خطط بعد.')}</div>`,'خططي','كل خطة لها خطوة تالية واضحة')};
+
+  save();
+  render();
+})();
+
 </script>
 
 </body></html>
