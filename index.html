@@ -1168,4 +1168,67 @@ render();
   save();render();
 })();
 </script>
+<style>
+/* ANIMAL_JOURNEY_V5 */
+.v5-journey-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:12px}.v5-journey-head h3{margin:0 0 4px}.v5-journey-head p{margin:0;color:var(--muted);font-size:12px;line-height:1.6}
+.v5-life-range{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 14px}.v5-life-chip{border:1px solid var(--border);border-radius:999px;padding:5px 9px;font-size:11px;color:var(--muted);background:#fff}.v5-life-chip.strong{background:var(--primary-soft);color:var(--primary);border-color:transparent;font-weight:700}
+.v5-animal-journey{display:grid;gap:10px}.v5-animal-day{border:1px solid var(--border);border-radius:14px;background:#fff;overflow:hidden}.v5-animal-day>summary{list-style:none;cursor:pointer;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:800}.v5-animal-day>summary::-webkit-details-marker{display:none}.v5-animal-day .count{font-size:11px;color:var(--muted);font-weight:600}.v5-animal-events{border-top:1px solid var(--border);padding:2px 12px 8px}.v5-animal-event{display:grid;grid-template-columns:62px 28px 1fr;gap:9px;align-items:start;padding:10px 0;border-bottom:1px solid #edf0ef}.v5-animal-event:last-child{border-bottom:0}.v5-animal-event .time{font-size:10px;color:var(--muted);line-height:1.35;padding-top:3px}.v5-animal-event .icon{width:27px;height:27px;border-radius:8px;background:#f2f5f3;display:grid;place-items:center;font-size:13px}.v5-animal-event h4{font-size:13px;margin:0 0 3px;line-height:1.45}.v5-animal-event p{font-size:11px;color:var(--muted);margin:0;line-height:1.55}.v5-animal-event .shared{display:inline-block;margin-inline-start:5px;border-radius:999px;padding:1px 6px;background:#f1f4f2;color:var(--muted);font-size:9px;font-weight:600}.v5-animal-event details{margin-top:5px}.v5-animal-event details summary{font-size:10px;color:var(--primary);cursor:pointer}.v5-animal-event .details{padding-top:5px;font-size:11px;color:var(--muted);line-height:1.65}.v5-journey-card{box-shadow:none;margin-top:12px;padding:16px}.v5-empty{padding:18px;text-align:center;color:var(--muted);font-size:12px}
+@media(max-width:520px){.v5-animal-event{grid-template-columns:50px 25px 1fr}.v5-journey-head{align-items:flex-start;flex-direction:column}.v5-journey-card{padding:13px}}
+</style>
+<script>
+/* ANIMAL_JOURNEY_V5 */
+(()=>{
+  if(typeof state==='undefined')return;
+  const esc5=x=>String(x??'').replace(/[&<>\"]/g,c=>c==='&'?'&amp;':c==='<'?'&lt;':c==='>'?'&gt;':'&quot;');
+  const time5=iso=>{if(!iso)return'وقت غير مسجل';try{return new Date(iso).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'})}catch(_){return'وقت غير مسجل'}};
+  const dateLabel5=d=>{if(d===today())return'اليوم';try{return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{weekday:'long',day:'numeric',month:'short',year:'numeric'})}catch(_){return d}};
+  const animalSale5=a=>(state.sales||[]).filter(s=>(s.animalIds||[]).includes(a.id)).sort((x,y)=>(x.date||'').localeCompare(y.date||''))[0]||null;
+  const insideLife5=(a,date)=>{if(!date)return false;const sale=animalSale5(a);return date>=a.buyDate&&(!sale?.date||date<=sale.date)};
+  const push5=(out,a,e)=>{if(e.date&&insideLife5(a,e.date))out.push(e)};
+  const hLabel5=k=>typeof healthEventLabel==='function'?healthEventLabel(k):'إجراء وقائي';
+  const eLabel5=t=>typeof emergencyTypeLabel==='function'?emergencyTypeLabel(t):'حالة طارئة';
+  const status5=s=>s==='treatment'?'تحت علاج':s==='quarantine'?'عزل استقبال':s==='sold'?'مباع':s==='normal'?'طبيعي':(s||'غير مسجل');
+
+  window.animalEventsV5=function(a){
+    const p=plan(a.planId),out=[];
+    push5(out,a,{date:a.buyDate,createdAt:a.createdAt,type:'animal',icon:a.animalType==='sheep'?'🐑':'🐄',title:'إدخال الحيوان إلى الخطة',summary:`وزن الشراء ${Number(a.buyWeight||0).toFixed(1)} كجم${a.buyPlace?' • '+esc5(a.buyPlace):''}`,details:[a.buyPrice?`سعر الشراء: ${fmt(Number(a.buyPrice)||0)}`:'',a.selection?.result==='suitable'?'تم اعتماده بعد فحص الشراء المسجل':'سجل قديم — فحص الشراء الكامل غير موثق'].filter(Boolean).join('<br>')});
+
+    planFeedingLogs(p.id).forEach(l=>{
+      const row=(l.animalEntries||[]).find(x=>x.animalId===a.id);
+      if(row){push5(out,a,{date:l.date,createdAt:l.createdAt,type:'feed',icon:'🌾',title:'تغذية',summary:`${Number(row.concentrateKg||0).toFixed(2)} كجم مركز + ${Number(row.roughageKg||0).toFixed(2)} كجم مالئ`,details:l.mixMode==='course'?'المركزات من خلطة المحاضرة المسجلة لهذا اليوم':l.mixMode==='ready'?'علف مركز جاهز/مخلوط كما تم تسجيله':''});}
+      else if(insideLife5(a,l.date)){push5(out,a,{date:l.date,createdAt:l.createdAt,type:'feed',icon:'🌾',title:'تغذية القطيع',shared:true,summary:'تم تسجيل تغذية للقطيع، لكن حصة هذا الحيوان لم تكن محفوظة منفصلة',details:`إجمالي القطيع المسجل: ${Number((l.totalConcentrateKg??l.concentrateKg)||0).toFixed(2)} كجم مركز • ${Number((l.totalRoughageKg??l.roughageKg)||0).toFixed(2)} كجم مالئ`});}
+    });
+
+    const dailyWeightKeys=new Set(),dailyNoteKeys=new Set();
+    (state.daily||[]).filter(d=>d.planId===p.id&&insideLife5(a,d.date)).forEach(d=>{
+      if(d.shelterCleaned)push5(out,a,{date:d.date,createdAt:d.createdAt,type:'clean',icon:'🧹',title:'نظافة الزريبة',shared:true,summary:'تم تنظيف الزريبة في هذا اليوم',details:d.note&&d.note!=='نظافة الزريبة'?esc5(d.note):''});
+      if(d.note&&d.note!=='نظافة الزريبة')push5(out,a,{date:d.date,createdAt:d.createdAt,type:'herdnote',icon:'✎',title:'ملاحظة على القطيع',shared:true,summary:esc5(d.note),details:''});
+      const en=(d.entries||[]).find(x=>x.animalId===a.id);
+      if(en){
+        const bits=[];if(en.weight){bits.push(`الوزن ${en.weight} كجم`);dailyWeightKeys.add(`${d.date}|${Number(en.weight)}`)}if(en.status)bits.push(`الحالة: ${status5(en.status)}`);if(en.note){bits.push(esc5(en.note));dailyNoteKeys.add(`${d.date}|${en.note}`)}
+        if(bits.length)push5(out,a,{date:d.date,createdAt:d.createdAt,type:'daily',icon:'☑',title:'متابعة يومية',summary:bits.join(' • '),details:''});
+      }
+    });
+
+    (a.weights||[]).forEach(w=>{if(w.date===a.buyDate&&Number(w.value)===Number(a.buyWeight))return;if(dailyWeightKeys.has(`${w.date}|${Number(w.value)}`))return;push5(out,a,{date:w.date,createdAt:w.createdAt,type:'weight',icon:'⚖️',title:'تسجيل وزن',summary:`${Number(w.value||0).toFixed(1)} كجم`,details:''})});
+    (a.notes||[]).forEach(n=>{if(dailyNoteKeys.has(`${n.date}|${n.text}`))return;push5(out,a,{date:n.date,createdAt:n.createdAt,type:'note',icon:'✎',title:'ملاحظة على الحيوان',summary:esc5(n.text||''),details:''})});
+
+    planHealthLogs(p.id).filter(l=>l.animalId===a.id).forEach(l=>{const danger=typeof healthDanger==='function'?healthDanger(l):[];push5(out,a,{date:l.date,createdAt:l.createdAt,type:'health',icon:'♡',title:danger.length?'متابعة صحية — توجد ملاحظة':'فحص صحي',summary:danger.length?danger.map(esc5).join('، '):(l.note?esc5(l.note):'تم تسجيل الفحص الصحي'),details:[l.appetiteOk===false?'الشهية تحتاج متابعة':'',l.drinkingOk===false?'الشرب غير طبيعي':'',l.isolated?'تم العزل':''].filter(Boolean).join('<br>')})});
+    planHealthEvents(p.id).filter(e=>!e.animalId||e.animalId===a.id).forEach(e=>push5(out,a,{date:e.date,createdAt:e.createdAt,type:'preventive',icon:'💉',title:hLabel5(e.kind),shared:!e.animalId,summary:e.guidance||'إجراء وقائي مسجل',details:e.note||''}));
+    planTreatments(p.id).filter(t=>(t.animalIds||[]).includes(a.id)).forEach(t=>push5(out,a,{date:t.start,createdAt:t.createdAt,type:'treatment',icon:'💊',title:`علاج: ${esc5(t.name)}`,summary:t.dose?`الجرعة المسجلة: ${esc5(t.dose)}`:(t.reason||'علاج مسجل'),details:[t.reason,t.route?`الطريقة: ${esc5(t.route)}`:'',t.withdrawalUntil?`فترة السحب حتى ${esc5(t.withdrawalUntil)}`:''].filter(Boolean).map(esc5).join('<br>')}));
+    (state.emergencies||[]).filter(e=>e.planId===p.id&&(!e.animalId||e.animalId===a.id)).forEach(e=>push5(out,a,{date:e.date||e.createdAt?.slice(0,10),createdAt:e.createdAt,type:'emergency',icon:'🚨',title:eLabel5(e.type),shared:!e.animalId,summary:e.status==='resolved'?'تم إغلاق الحالة':'حالة مفتوحة',details:e.note||''}));
+
+    const sale=animalSale5(a);if(sale)push5(out,a,{date:sale.date,createdAt:sale.createdAt,type:'sale',icon:'↗',title:'بيع الحيوان',summary:`${fmt(Number(sale.amount)||0)}${sale.buyer?' • '+esc5(sale.buyer):''}`,details:[sale.weight?`وزن البيع: ${sale.weight} كجم`:'',sale.place?`مكان البيع: ${esc5(sale.place)}`:'',sale.fees?`مصروفات البيع: ${fmt(Number(sale.fees)||0)}`:''].filter(Boolean).join('<br>')});
+
+    const priority={animal:0,feed:20,clean:30,herdnote:35,daily:40,weight:45,note:50,health:60,preventive:70,treatment:80,emergency:90,sale:999};
+    return out.sort((x,y)=>{const d=(x.date||'').localeCompare(y.date||'');if(d)return d;if(x.createdAt&&y.createdAt){const t=x.createdAt.localeCompare(y.createdAt);if(t)return t}return (priority[x.type]??100)-(priority[y.type]??100)});
+  };
+
+  function eventHtml5(e){const more=e.details&&String(e.details).trim();return `<div class="v5-animal-event"><div class="time">${time5(e.createdAt)}</div><div class="icon">${e.icon}</div><div><h4>${e.title}${e.shared?'<span class="shared">حدث مشترك</span>':''}</h4><p>${e.summary||''}</p>${more?`<details><summary>تفاصيل</summary><div class="details">${e.details}</div></details>`:''}</div></div>`}
+  window.animalJourneyHtmlV5=function(a){const es=animalEventsV5(a),groups={};es.forEach(e=>(groups[e.date]||(groups[e.date]=[])).push(e));const dates=Object.keys(groups).sort();if(!dates.length)return'<div class="v5-empty">لا توجد أحداث مسجلة لهذا الحيوان بعد.</div>';return `<div class="v5-animal-journey">${dates.map((d,i)=>`<details class="v5-animal-day" ${i===dates.length-1?'open':''}><summary><span>${dateLabel5(d)}</span><span class="count">${groups[d].length} حدث</span></summary><div class="v5-animal-events">${groups[d].map(eventHtml5).join('')}</div></details>`).join('')}</div>`};
+
+  window.openAnimal=function(id){const a=state.animals.find(x=>x.id===id);if(!a)return;const p=plan(a.planId),last=a.weights.at(-1)?.value||a.buyWeight,type=a.animalType==='sheep'?'ضأن':a.animalType==='calf'?'عجل':'غير محدد',sale=animalSale5(a),selection=a.selection?.result==='suitable'?'<span class="badge active">اجتاز فحص الاختيار</span>':'<span class="badge">سجل قديم — فحص الاختيار الكامل غير موثق</span>',events=animalEventsV5(a);modal(`<div class="modal-head"><div class="animal-head"><div class="animal-icon">${a.animalType==='sheep'?'🐑':'🐂'}</div><div><h3 style="margin:0">الحيوان #${esc5(a.tag)}</h3><div class="small muted">${esc5(p.name)} • ${type} • ${animalStatus(a.status)}</div></div></div><button class="close" onclick="closeModal()">×</button></div>${a.pinnedNote?`<div class="note-pin">📌 <strong>ملاحظة مهمة:</strong> ${esc5(a.pinnedNote)}</div>`:''}<div style="margin-top:12px">${selection} ${a.health?.arrivalCompleted?'<span class="badge active">استقبال صحي موثق</span>':a.health?.arrivalCompleted===false?'<span class="badge sell">بانتظار توثيق الاستقبال والعزل</span>':'<span class="badge">الاستقبال الصحي غير موثق</span>'} ${activeWithdrawal(a.id)?`<span class="badge treat">فترة سحب حتى ${activeWithdrawal(a.id)}</span>`:''}</div><div class="grid metrics" style="margin-top:15px"><div class="metric"><div class="label">وزن الشراء</div><div class="value">${a.buyWeight}</div><div class="note">كجم</div></div><div class="metric"><div class="label">آخر وزن</div><div class="value">${last}</div><div class="note">كجم</div></div><div class="metric good"><div class="label">إجمالي الزيادة</div><div class="value">+${last-a.buyWeight}</div><div class="note">كجم</div></div></div><div class="card v5-journey-card"><div class="v5-journey-head"><div><h3>رحلة الحيوان</h3><p>كل ما حدث لهذا الحيوان من دخوله إلى ${sale?'بيعه':'اليوم'}؛ الأحداث المشتركة مع القطيع تظهر هنا أيضًا.</p></div><span class="badge">${events.length} حدث</span></div><div class="v5-life-range"><span class="v5-life-chip strong">الدخول: ${a.buyDate}</span>${sale?`<span class="v5-life-chip strong">البيع: ${sale.date}</span>`:'<span class="v5-life-chip">ما زال ضمن القطيع</span>'}</div>${animalJourneyHtmlV5(a)}</div><details class="v5-advanced"><summary class="small muted" style="cursor:pointer;margin-top:12px">البيانات الأولية الثابتة</summary><div class="card" style="box-shadow:none;margin-top:8px"><div class="form-grid"><div><div class="small muted">نوع الحيوان</div><strong>${type}</strong></div><div><div class="small muted">تاريخ الشراء</div><strong>${a.buyDate}</strong></div><div><div class="small muted">مكان الشراء</div><strong>${esc5(a.buyPlace||'-')}</strong></div><div><div class="small muted">سعر الشراء</div><strong>${fmt(a.buyPrice)}</strong></div><div><div class="small muted">السلالة / الجنس</div><strong>${esc5(a.breed||'-')} / ${esc5(a.sex)}</strong></div><div><div class="small muted">فحص خبير/بيطري</div><strong>${a.selection?.expertChecked?'تم':'غير مسجل'}</strong></div></div></div></details>`) };
+})();
+</script>
+
 </body></html>
