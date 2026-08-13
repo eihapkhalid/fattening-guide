@@ -28,7 +28,7 @@ if v15_marker not in s:
 else:
     print('Feeding input persistence v15 already applied')
 
-# Keep feed actions prominent without creating a second deployment workflow.
+# Keep the previous feed action layer for compatibility with older generated pages.
 v16_marker='FEED_ACTIONS_V16'
 if v16_marker not in s:
     addon=Path('.deploy/feed-actions-v16-addon.html').read_text(encoding='utf-8')
@@ -39,6 +39,18 @@ if v16_marker not in s:
     print('Applied feed actions v16')
 else:
     print('Feed actions v16 already applied')
+
+# Correct the UX location: mix creation belongs in the feeding page, not feeds/prices.
+v17_marker='FEED_MIX_PLACEMENT_V17'
+if v17_marker not in s:
+    addon=Path('.deploy/feed-mix-placement-v17-addon.html').read_text(encoding='utf-8')
+    if '</body>' not in s:
+        raise RuntimeError('Missing </body>')
+    s=s.replace('</body>',addon+'\n</body>',1)
+    changed=True
+    print('Applied feed mix placement v17')
+else:
+    print('Feed mix placement v17 already applied')
 
 if changed:
     path.write_text(s,encoding='utf-8')
