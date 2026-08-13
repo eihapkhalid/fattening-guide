@@ -1800,4 +1800,57 @@ if(typeof state!=="undefined"&&Array.isArray(state.plans)){state.plans.forEach(p
 })();
 </script>
 
+<style>
+/* FEED_ACTIONS_V16 */
+.feed-page-v16{display:grid;gap:0}
+.feed-actions-v16{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 16px}
+.feed-action-v16{appearance:none;width:100%;min-height:108px;border:1px solid var(--border);background:var(--surface);border-radius:16px;padding:15px;text-align:right;color:var(--text);display:flex;align-items:flex-start;gap:12px;box-shadow:0 5px 18px rgba(23,74,58,.05);transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.feed-action-v16:hover{transform:translateY(-2px);border-color:#b8d1c6;box-shadow:0 9px 24px rgba(23,74,58,.08)}
+.feed-action-v16:focus-visible{outline:3px solid rgba(36,98,79,.16);outline-offset:2px}
+.feed-action-v16.featured{border-color:#8fb9a8;background:linear-gradient(180deg,#f6fbf8,#edf7f2)}
+.feed-action-v16 .icon{width:42px;height:42px;flex:0 0 42px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border);display:grid;place-items:center;color:var(--primary)}
+.feed-action-v16.featured .icon{background:var(--primary);border-color:var(--primary);color:#fff}
+.feed-action-v16 svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.feed-action-v16 .copy{min-width:0;flex:1}.feed-action-v16 strong{display:block;font-size:14px;margin:1px 0 5px}.feed-action-v16 small{display:block;color:var(--muted);font-size:11px;line-height:1.65;font-weight:500}.feed-action-v16 .tag{display:inline-flex;margin-top:8px;padding:3px 7px;border-radius:999px;background:#fff;border:1px solid #c7ded4;color:var(--primary);font-size:9px;font-weight:700}
+/* The top action bar replaces the older small contextual buttons on this page. */
+.feed-page-v16 .feed-guide-v10 .section-title button[onclick^="openMixBuilderV10"],
+.feed-page-v16 .section-title .actions button[onclick^="openFeedModal"],
+.feed-page-v16 .section-title .actions button[onclick*="setTab('feeding')"]{display:none!important}
+.feed-page-v16 .section-title .actions:empty{display:none}
+@media(max-width:780px){.feed-actions-v16{grid-template-columns:1fr}.feed-action-v16{min-height:88px}}
+</style>
+<script>
+/* FEED_ACTIONS_V16 */
+(()=>{
+  if(typeof window.feedsTab!=='function')return;
+  const oldFeedsTab16=window.feedsTab;
+  const icon16=type=>type==='stock'
+    ?`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5 12 3l8 4.5-8 4.5-8-4.5Z"/><path d="M4 7.5V16l8 5 8-5V7.5"/><path d="M12 12v9"/></svg>`
+    :type==='mix'
+      ?`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v5l-4 8a3 3 0 0 0 2.7 4.3h10.6A3 3 0 0 0 20 16l-4-8V3"/><path d="M7 12h10"/><path d="M9 3h6"/></svg>`
+      :`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/><path d="m15.5 16 1.5 1.5 3-3"/></svg>`;
+
+  window.openMixFromFeedActionsV16=function(pid){
+    const fn=window.openMixBuilderV11||window.openMixBuilderV10;
+    if(typeof fn==='function')fn(pid);
+  };
+
+  window.feedsTab=function(p){
+    const mixes=(state.feedMixes||[]).filter(m=>m.planId===p.id);
+    const mixHint=mixes.length?`${mixes.length} خلطة محفوظة — أنشئ خلطة أخرى عند الحاجة.`:'كوّن خلطة خاصة من المواد والأوزان التي تختارها.';
+    const actions=`<div class="feed-actions-v16" aria-label="إجراءات العلف">
+      <button type="button" class="feed-action-v16" onclick="openFeedModal('${p.id}')">
+        <span class="icon">${icon16('stock')}</span><span class="copy"><strong>إضافة علف للمخزون</strong><small>سجّل المادة والكمية والسعر قبل استخدامها.</small></span>
+      </button>
+      <button type="button" class="feed-action-v16 featured" onclick="openMixFromFeedActionsV16('${p.id}')">
+        <span class="icon">${icon16('mix')}</span><span class="copy"><strong>إنشاء خلطة جديدة</strong><small>${mixHint}</small><span class="tag">خلطة مخصصة</span></span>
+      </button>
+      <button type="button" class="feed-action-v16" onclick="openFeedingLogModal('${p.id}')">
+        <span class="icon">${icon16('feed')}</span><span class="copy"><strong>تسجيل تغذية اليوم</strong><small>سجّل الكمية الفعلية للقطيع أو للحيوان المحدد.</small></span>
+      </button>
+    </div>`;
+    return `<div class="feed-page-v16">${actions}${oldFeedsTab16(p)}</div>`;
+  };
+})();
+</script>
 </body></html>
