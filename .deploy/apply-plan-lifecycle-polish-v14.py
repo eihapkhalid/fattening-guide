@@ -3,13 +3,30 @@ import sys
 
 path=Path(sys.argv[1] if len(sys.argv)>1 else 'index.html')
 s=path.read_text(encoding='utf-8')
+changed=False
+
 marker='PLAN_LIFECYCLE_POLISH_V14'
-if marker in s:
+if marker not in s:
+    addon=Path('.deploy/plan-lifecycle-polish-v14-addon.html').read_text(encoding='utf-8')
+    if '</body>' not in s:
+        raise RuntimeError('Missing </body>')
+    s=s.replace('</body>',addon+'\n</body>',1)
+    changed=True
+    print('Applied plan lifecycle polish v14')
+else:
     print('Plan lifecycle polish v14 already applied')
-    raise SystemExit(0)
-addon=Path('.deploy/plan-lifecycle-polish-v14-addon.html').read_text(encoding='utf-8')
-if '</body>' not in s:
-    raise RuntimeError('Missing </body>')
-s=s.replace('</body>',addon+'\n</body>',1)
-path.write_text(s,encoding='utf-8')
-print('Applied plan lifecycle polish v14')
+
+# Keep the newest feeding-input fix in the single main deployment chain.
+v15_marker='FEEDING_INPUT_PERSISTENCE_V15'
+if v15_marker not in s:
+    addon=Path('.deploy/feeding-input-persistence-v15-addon.html').read_text(encoding='utf-8')
+    if '</body>' not in s:
+        raise RuntimeError('Missing </body>')
+    s=s.replace('</body>',addon+'\n</body>',1)
+    changed=True
+    print('Applied feeding input persistence v15')
+else:
+    print('Feeding input persistence v15 already applied')
+
+if changed:
+    path.write_text(s,encoding='utf-8')
