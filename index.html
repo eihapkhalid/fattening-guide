@@ -1766,4 +1766,38 @@ if(typeof state!=="undefined"&&Array.isArray(state.plans)){state.plans.forEach(p
  save();render();
 })();
 </script>
+<script>
+/* FEEDING_INPUT_PERSISTENCE_V15 */
+(()=>{
+  const oldOpenFeedingV15=window.openFeedingLogModal;
+  if(typeof oldOpenFeedingV15!=='function')return;
+
+  window.openFeedingLogModal=function(pid){
+    oldOpenFeedingV15(pid);
+    const form=document.getElementById('feedingScopeV7');
+    if(!form)return;
+
+    /* The old form-level onchange rebuilt every animal row whenever any
+       quantity field lost focus. That erased user-entered values. */
+    form.onchange=null;
+    form.removeAttribute('onchange');
+
+    /* Rebuild animal rows only when the action scope really changes. */
+    form.querySelectorAll('input[name="scope"]').forEach(radio=>{
+      radio.addEventListener('change',()=>{
+        if(typeof scopeChangedV7==='function')scopeChangedV7(form);
+        if(typeof scopeFeedRowsV7==='function')scopeFeedRowsV7(pid);
+      });
+    });
+
+    /* The single-animal selector already has an inline handler in V7.
+       Keep one explicit fallback only when no handler exists. */
+    const animalSelect=form.elements.targetAnimal;
+    if(animalSelect && !animalSelect.getAttribute('onchange')){
+      animalSelect.addEventListener('change',()=>scopeFeedRowsV7(pid));
+    }
+  };
+})();
+</script>
+
 </body></html>
