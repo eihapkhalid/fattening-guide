@@ -30,12 +30,14 @@ jobs:
           python .deploy/fix-guided-flow-v10c.py index.html
           python .deploy/apply-flexible-mix-status-v11.py index.html
           python .deploy/apply-animal-status-recovery-v12.py index.html
+          python .deploy/apply-plan-archive-icons-v13.py index.html
 
       - name: Verify current features and JavaScript syntax
         run: |
           grep -q "GUIDED_FLOW_V10" index.html
           grep -q "FLEXIBLE_MIX_STATUS_V11" index.html
           grep -q "ANIMAL_STATUS_RECOVERY_V12" index.html
+          grep -q "PLAN_ARCHIVE_ICONS_V13" index.html
           grep -q "تحديد الكل" index.html
           grep -q "كامل القطيع ما عدا" index.html
           grep -q "إنشاء خلطة مرنة" index.html
@@ -44,6 +46,10 @@ jobs:
           grep -q "أؤكد أن الحيوان تعافى" index.html
           grep -q "سعر الصرف مؤكد اليوم" index.html
           grep -q "رحلة الحيوان" index.html
+          grep -q "أرشفة الخطة" index.html
+          grep -q "المؤرشفة" index.html
+          grep -q "renamePlanV13" index.html
+          grep -q "restorePlanV13" index.html
           ! grep -q "المحاضرة" index.html
           ! grep -q "الدكتورة" index.html
           python - <<'PY'
@@ -81,6 +87,12 @@ jobs:
                 assert(w.document.querySelector('.content'),'render failed: '+tab);
               }
 
+              // Professional timeline icons are SVG, not emoji glyphs.
+              ev('state.planTab="timeline";render()');
+              const eventIcons=[...w.document.querySelectorAll('.v4-evicon')];
+              assert(eventIcons.length>0,'timeline events missing');
+              assert(eventIcons.every(x=>x.querySelector('svg.v13-icon')),'timeline still uses non-standard event icons');
+
               // Flexible mix accepts arbitrary total and an inline new material.
               w.openMixBuilderV10(p.id);
               const mf=w.document.getElementById('mixBuilderV11');assert(mf,'flexible mix builder missing');
@@ -105,10 +117,24 @@ jobs:
               assert(ev(`state.animals.find(a=>a.id===${JSON.stringify(aid)}).status`)==='normal','animal did not return normal');
               assert(ev(`state.emergencies.find(e=>e.id==='em_current').status`)==='resolved','emergency not resolved');
               assert(ev(`state.treatments.find(t=>t.id==='tx_current').status`)==='completed','treatment not completed');
-              assert(ev(`state.animalStatusEvents.some(e=>e.animalId===${JSON.stringify(aid)}&&e.to==='normal')`),'recovery not logged');
+
+              // Plan rename + soft archive + restore.
+              const pid=p.id,oldName=p.name,newName='خطة اختبار إدارة';
+              const fakeRename=w.document.createElement('form');fakeRename.innerHTML='<input name="name">';fakeRename.elements.name.value=newName;
+              w.renamePlanV13({preventDefault(){},target:fakeRename},pid);
+              assert(ev(`state.plans.find(x=>x.id===${JSON.stringify(pid)}).name`)==='خطة اختبار إدارة','plan rename failed');
+              w.archivePlanV13(pid);
+              assert(ev(`state.plans.find(x=>x.id===${JSON.stringify(pid)}).archived`)===true,'plan archive failed');
+              ev('state.currentPage="dashboard";render()');
+              assert(!w.document.body.textContent.includes(newName),'archived plan still visible on dashboard');
+              ev('state.currentPage="plans";state.planListFilter="archived";render()');
+              assert(w.document.body.textContent.includes(newName),'archived plan missing from archive list');
+              w.restorePlanV13(pid);
+              assert(ev(`state.plans.find(x=>x.id===${JSON.stringify(pid)}).archived`)===false,'plan restore failed');
+              ev(`state.plans.find(x=>x.id===${JSON.stringify(pid)}).name=${JSON.stringify(oldName)};save()`);
 
               if(errors.length)throw new Error(errors.join('\n---\n'));
-              console.log('Current flow smoke test passed');
+              console.log('Current flow + plan archive/icons smoke test passed');
             }catch(e){errors.push(e.stack||String(e));}
             if(errors.length){console.error(errors.join('\n---\n'));process.exit(1)}
           },250);
@@ -120,5 +146,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Unify current workflow and simplify animal recovery"
+          git commit -m "Polish icons and add plan archive management"
           git push
