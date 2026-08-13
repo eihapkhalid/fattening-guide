@@ -1,4 +1,4 @@
-name: Test feeding input persistence
+name: Test feed usability regressions
 
 on:
   workflow_run:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  feeding-input-persistence:
+  feed-usability-regressions:
     if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
@@ -18,8 +18,10 @@ jobs:
         with:
           ref: master
 
-      - name: Verify v15 marker
-        run: grep -q "FEEDING_INPUT_PERSISTENCE_V15" index.html
+      - name: Verify feed UX markers
+        run: |
+          grep -q "FEEDING_INPUT_PERSISTENCE_V15" index.html
+          grep -q "FEED_ACTIONS_V16" index.html
 
       - name: Install jsdom
         run: npm install jsdom@24 --no-save --silent
@@ -67,6 +69,42 @@ jobs:
               assert(c2.value==='7.456','second animal value did not persist');
               if(errors.length)throw new Error(errors.join('\n'));
               console.log('Feeding input persistence regression test passed');
+            }catch(e){console.error(e.stack||e);process.exit(1)}
+          },250);
+          JS
+
+      - name: Keep mix creation prominent and unique
+        run: |
+          node - <<'JS'
+          const fs=require('fs');
+          const {JSDOM,VirtualConsole}=require('jsdom');
+          const errors=[];
+          const vc=new VirtualConsole();
+          vc.on('jsdomError',e=>errors.push(e.message));
+          const dom=new JSDOM(fs.readFileSync('index.html','utf8'),{
+            runScripts:'dangerously',url:'https://fattening.test/',pretendToBeVisual:true,virtualConsole:vc,
+            beforeParse(w){w.alert=()=>{};w.confirm=()=>true;w.HTMLElement.prototype.scrollIntoView=function(){}}
+          });
+          const w=dom.window;
+          const ev=x=>w.eval(x);
+          const assert=(ok,msg)=>{if(!ok)throw new Error(msg)};
+          setTimeout(()=>{
+            try{
+              const p=ev('state.plans.find(p=>p.status!=="closed"&&!p.archived)');
+              assert(p,'active plan missing');
+              const host=w.document.createElement('div');
+              host.innerHTML=w.feedsTab(p);
+              w.document.body.appendChild(host);
+              const actions=[...host.querySelectorAll('.feed-actions-v16 .feed-action-v16')];
+              assert(actions.length===3,'top feed action bar must contain exactly three actions');
+              const featured=host.querySelector('.feed-action-v16.featured');
+              assert(featured&&featured.textContent.includes('إنشاء خلطة جديدة'),'prominent create-mix action missing');
+              const oldMix=host.querySelector('.feed-guide-v10 .section-title button[onclick^="openMixBuilderV10"]');
+              if(oldMix)assert(w.getComputedStyle(oldMix).display==='none','old create-mix button is still visible');
+              w.openMixFromFeedActionsV16(p.id);
+              assert(w.document.getElementById('mixBuilderV11'),'top create-mix action did not open flexible mix builder');
+              if(errors.length)throw new Error(errors.join('\n'));
+              console.log('Prominent feed actions regression test passed');
             }catch(e){console.error(e.stack||e);process.exit(1)}
           },250);
           JS
