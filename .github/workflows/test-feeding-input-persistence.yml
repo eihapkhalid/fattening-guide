@@ -1,0 +1,72 @@
+name: Test feeding input persistence
+
+on:
+  workflow_run:
+    workflows: ["Deploy full fattening site"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  feeding-input-persistence:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout latest master
+        uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Verify v15 marker
+        run: grep -q "FEEDING_INPUT_PERSISTENCE_V15" index.html
+
+      - name: Install jsdom
+        run: npm install jsdom@24 --no-save --silent
+
+      - name: Keep animal feeding values while moving between fields
+        run: |
+          node - <<'JS'
+          const fs=require('fs');
+          const {JSDOM,VirtualConsole}=require('jsdom');
+          const errors=[];
+          const vc=new VirtualConsole();
+          vc.on('jsdomError',e=>errors.push(e.message));
+          vc.on('error',e=>errors.push(String(e)));
+          const dom=new JSDOM(fs.readFileSync('index.html','utf8'),{
+            runScripts:'dangerously',url:'https://fattening.test/',pretendToBeVisual:true,virtualConsole:vc,
+            beforeParse(w){w.alert=()=>{};w.confirm=()=>true;w.HTMLElement.prototype.scrollIntoView=function(){}}
+          });
+          const w=dom.window;
+          const ev=x=>w.eval(x);
+          const assert=(ok,msg)=>{if(!ok)throw new Error(msg)};
+          setTimeout(()=>{
+            try{
+              const p=ev('state.plans.find(p=>p.status!=="closed"&&!p.archived)');
+              assert(p,'active plan missing');
+              w.openFeedingLogModal(p.id);
+              const form=w.document.getElementById('feedingScopeV7');
+              assert(form,'feeding form missing');
+              assert(form.onchange===null,'form-level onchange still rebuilds feeding rows');
+              const rows=[...form.querySelectorAll('.v4-animal-feed')];
+              assert(rows.length>=2,'need at least two animal rows');
+              const c1=rows[0].querySelector('input[name^="conc_"]');
+              const r1=rows[0].querySelector('input[name^="rough_"]');
+              const c2=rows[1].querySelector('input[name^="conc_"]');
+              c1.value='9.123';
+              c1.dispatchEvent(new w.Event('input',{bubbles:true}));
+              const roughAfterFirst=r1.value;
+              c1.dispatchEvent(new w.Event('change',{bubbles:true}));
+              assert(form.contains(c1),'first row was rebuilt after leaving first field');
+              assert(c1.value==='9.123','first animal concentrate value was lost');
+              assert(r1.value===roughAfterFirst,'first animal roughage value was lost');
+              c2.value='7.456';
+              c2.dispatchEvent(new w.Event('input',{bubbles:true}));
+              c2.dispatchEvent(new w.Event('change',{bubbles:true}));
+              assert(c1.value==='9.123','first animal value disappeared after editing second animal');
+              assert(c2.value==='7.456','second animal value did not persist');
+              if(errors.length)throw new Error(errors.join('\n'));
+              console.log('Feeding input persistence regression test passed');
+            }catch(e){console.error(e.stack||e);process.exit(1)}
+          },250);
+          JS
