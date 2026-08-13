@@ -31,6 +31,9 @@ jobs:
       - name: Apply unified action scope
         run: python .deploy/apply-action-scope-v7.py index.html
 
+      - name: Apply configurable calf shelter space
+        run: python .deploy/apply-calf-space-v8.py index.html
+
       - name: Verify core features, copy and JavaScript syntax
         run: |
           grep -q "purchaseCheckNames" index.html
@@ -43,6 +46,9 @@ jobs:
           grep -q "ANIMAL_JOURNEY_V5" index.html
           grep -q "PROFESSIONAL_COPY_V6" index.html
           grep -q "ACTION_SCOPE_V7" index.html
+          grep -q "CALF_SPACE_V8" index.html
+          grep -q "العجول: 3 م² لكل رأس" index.html
+          grep -q "calfSpacePerHead" index.html
           grep -q "على من سيُطبق هذا الإجراء؟" index.html
           grep -q "كامل القطيع" index.html
           grep -q "حيوان واحد" index.html
@@ -61,6 +67,7 @@ jobs:
           grep -q "window.ezDay=function ezDay" index.html
           grep -q "window.ezPhase=function ezPhase" index.html
           ! grep -q "includes(state.planTab)?'overview'" index.html
+          ! grep -q "لا يعرض النظام رقم مساحة للعجل" index.html
           ! grep -q "المحاضرة" index.html
           ! grep -q "الدكتورة" index.html
           python - <<'PY'
@@ -73,7 +80,7 @@ jobs:
           PY
           node --check /tmp/fattening-site.js
 
-      - name: Runtime UI and action scope smoke test
+      - name: Runtime UI, scope and shelter smoke test
         run: |
           npm install jsdom@24 --no-save --silent
           node - <<'JS'
@@ -107,6 +114,22 @@ jobs:
                 assert(!w.document.body.textContent.includes('المحاضرة'),'training wording visible in '+t);
                 assert(!w.document.body.textContent.includes('الدكتورة'),'person-source wording visible in '+t);
               }
+
+              // Shelter: calves default to 3 m²/head and the value remains configurable.
+              ev('state.planTab="shelter"; render()');
+              const sf=w.document.getElementById('shelterForm');
+              assert(sf,'shelter form missing');
+              sf.elements.animalType.value='calf';
+              sf.elements.headCount.value='4';
+              sf.elements.calfSpacePerHead.value='3';
+              w.updateShelterAssessment();
+              assert(w.document.body.textContent.includes('العجول: 3 م² لكل رأس'),'3m2 calf rule not visible');
+              assert(w.document.getElementById('shelterSpaceNote').textContent.includes('12 م²'),'4 calves should require 12m2');
+              sf.elements.calfSpacePerHead.value='3.5';
+              w.updateShelterAssessment();
+              assert(w.document.getElementById('shelterSpaceNote').textContent.includes('14 م²'),'configurable calf space calculation failed');
+              sf.elements.calfSpacePerHead.value='3';
+              w.updateShelterAssessment();
 
               ev('state.planTab="timeline"; render()');
               assert(w.document.body.textContent.includes('سجل القطيع'),'timeline screen missing');
@@ -196,17 +219,17 @@ jobs:
               }
 
               assert(!errors.length,'runtime errors detected');
-              console.log('Action scope and runtime smoke test passed');
+              console.log('Calf shelter space, action scope and runtime smoke test passed');
             }catch(e){errors.push(e.stack||String(e));}
             if(errors.length){console.error(errors.join('\n---\n'));process.exit(1)}
           },140);
           JS
 
-      - name: Commit unified action scope site
+      - name: Commit current site
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Add herd or single-animal action scope"
+          git commit -m "Set calf shelter space to configurable 3m2 per head"
           git push
