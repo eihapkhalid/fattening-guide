@@ -1,0 +1,124 @@
+name: Deploy flexible mix and status v11
+
+on:
+  workflow_run:
+    workflows: ["Deploy full fattening site"]
+    types: [completed]
+
+permissions:
+  contents: write
+
+jobs:
+  deploy-v11:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.actor.login != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout latest master
+        uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Apply flexible mix and animal status lifecycle
+        run: python .deploy/apply-flexible-mix-status-v11.py index.html
+
+      - name: Verify v11 and JavaScript syntax
+        run: |
+          grep -q "FLEXIBLE_MIX_STATUS_V11" index.html
+          grep -q "إنشاء خلطة مرنة" index.html
+          grep -q "مادة جديدة غير موجودة بالقائمة" index.html
+          grep -q "تحت المراقبة" index.html
+          grep -q "finishTreatmentV11" index.html
+          grep -q "animalStatusEvents" index.html
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          blocks=re.findall(r'<script[^>]*>(.*?)</script>',s,re.S)
+          assert blocks
+          Path('/tmp/fattening-v11.js').write_text('\n'.join(blocks),encoding='utf-8')
+          PY
+          node --check /tmp/fattening-v11.js
+
+      - name: Runtime flexible mix and status smoke test
+        run: |
+          npm install jsdom@24 --no-save --silent
+          node - <<'JS'
+          const fs=require('fs');
+          const {JSDOM,VirtualConsole}=require('jsdom');
+          const html=fs.readFileSync('index.html','utf8');
+          const errors=[];
+          const vc=new VirtualConsole();
+          vc.on('jsdomError',e=>errors.push('JSDOM: '+e.message));
+          vc.on('error',e=>errors.push('console.error: '+e));
+          const dom=new JSDOM(html,{runScripts:'dangerously',url:'https://fattening.test/',pretendToBeVisual:true,virtualConsole:vc,beforeParse(w){w.confirm=()=>true;w.alert=()=>{};w.HTMLElement.prototype.scrollIntoView=function(){}}});
+          const w=dom.window;
+          w.addEventListener('error',e=>errors.push('window error: '+(e.error?.stack||e.message)));
+          const ev=code=>w.eval(code);
+          const assert=(ok,msg)=>{if(!ok)throw new Error(msg)};
+          const wait=ms=>new Promise(r=>setTimeout(r,ms));
+          setTimeout(async()=>{
+            try{
+              const p=ev('state.currentPlanId=state.plans[0].id; state.currentPage="plan"; plan()');
+              assert(p,'no plan');
+
+              // Flexible mix: arbitrary batch weight and inline new material.
+              w.openMixBuilderV10(p.id);
+              const mf=w.document.getElementById('mixBuilderV11');
+              assert(mf,'v11 mix builder missing');
+              mf.elements.name.value='خلطة مرنة اختبار';
+              const rows=[...mf.querySelectorAll('.v11-mix-row')];
+              assert(rows.length===2,'mix should start with two rows');
+              const first=rows[0].querySelector('select[name="material"]');
+              const firstCode=[...first.options].map(o=>o.value).find(v=>v&&v!=='__new__');
+              assert(firstCode,'catalog material missing');
+              first.value=firstCode;w.mixMaterialChangedV11(first);rows[0].querySelector('input[name="kg"]').value='30';
+              const second=rows[1].querySelector('select[name="material"]');
+              second.value='__new__';w.mixMaterialChangedV11(second);rows[1].querySelector('input[name="newName"]').value='مادة اختبار مرنة';rows[1].querySelector('select[name="newCategory"]').value='other';rows[1].querySelector('input[name="kg"]').value='55';
+              mf.elements.confirm.checked=true;w.updateMixTotalV11();
+              assert(w.document.getElementById('mixTotalV11').dataset.total==='85','arbitrary mix total not calculated');
+              const beforeMix=ev('state.feedMixes.length');
+              w.saveMixV11({preventDefault(){},target:mf},p.id);
+              assert(ev('state.feedMixes.length')===beforeMix+1,'flexible mix not saved');
+              const mix=ev('state.feedMixes.at(-1)');
+              assert(Math.abs(mix.batchKg-85)<0.001,'batch weight not preserved');
+              assert(mix.components.length===2,'mix components missing');
+              assert(Math.abs(mix.components.reduce((z,c)=>z+c.ratio,0)-100)<0.01,'normalized ratios invalid');
+              assert(ev('state.customFeedCatalog.some(x=>x.name==="مادة اختبار مرنة")'),'new material not added to catalog');
+
+              // Animal lifecycle: emergency -> observation -> normal.
+              const aid='v11_'+Date.now();
+              ev(`state.animals.push({id:${JSON.stringify('PLACEHOLDER')},planId:plan().id,groupId:plan().groups?.[0]?.id||'',animalType:'calf',tag:'V11-TEST',buyDate:today(),buyPlace:'اختبار',buyWeight:200,buyPrice:0,breed:'',sex:'ذكر',status:'treatment',selection:{result:'suitable'},health:{arrivalCompleted:true},weights:[{date:today(),value:200}],notes:[]})`.replace('PLACEHOLDER',aid));
+              ev(`state.emergencies.push({id:'em_v11',planId:plan().id,animalId:${JSON.stringify(aid)},date:today(),type:'bloat',status:'open',note:'اختبار'})`);
+              w.markEmergencyResolved('em_v11');
+              assert(ev(`state.animals.find(a=>a.id===${JSON.stringify(aid)}).status`)==='observation','resolved emergency should move animal to observation');
+              assert(ev(`state.animalStatusEvents.some(e=>e.animalId===${JSON.stringify(aid)}&&e.to==='observation')`),'status transition was not logged');
+              w.openAnimalStatusV11(aid);
+              const sf=w.document.querySelector('#modal form');
+              sf.querySelector('input[value="normal"]').checked=true;sf.elements.reason.value='عاد للأكل والحركة طبيعيًا';
+              w.saveAnimalStatusV11({preventDefault(){},target:sf},aid);
+              assert(ev(`state.animals.find(a=>a.id===${JSON.stringify(aid)}).status`)==='normal','manual recovery to normal failed');
+
+              // Active treatment completion -> observation, without losing treatment history.
+              ev(`state.treatments.push({id:'tx_v11',planId:plan().id,animalIds:[${JSON.stringify(aid)}],name:'علاج اختبار',status:'active',start:today(),days:1});state.animals.find(a=>a.id===${JSON.stringify(aid)}).status='treatment'`);
+              w.finishTreatmentV11('tx_v11');
+              assert(ev(`state.treatments.find(t=>t.id==='tx_v11').status`)==='completed','treatment not completed');
+              assert(ev(`state.animals.find(a=>a.id===${JSON.stringify(aid)}).status`)==='observation','completed treatment should move animal to observation');
+              w.openAnimal(aid);await wait(20);
+              assert(w.document.querySelector('.v11-status-button'),'animal status button missing');
+              assert(w.document.querySelector('.v11-status-strip'),'animal status summary missing');
+
+              assert(!errors.length,'runtime errors detected');
+              console.log('Flexible mix/status v11 smoke test passed');
+            }catch(e){errors.push(e.stack||String(e));}
+            if(errors.length){console.error(errors.join('\n---\n'));process.exit(1)}
+          },250);
+          JS
+
+      - name: Commit v11 site
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Make mixes flexible and manage animal recovery status"
+          git push
