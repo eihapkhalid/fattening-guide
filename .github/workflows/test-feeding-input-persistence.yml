@@ -22,6 +22,7 @@ jobs:
         run: |
           grep -q "FEEDING_INPUT_PERSISTENCE_V15" index.html
           grep -q "FEED_ACTIONS_V16" index.html
+          grep -q "FEED_MIX_PLACEMENT_V17" index.html
 
       - name: Install jsdom
         run: npm install jsdom@24 --no-save --silent
@@ -73,7 +74,7 @@ jobs:
           },250);
           JS
 
-      - name: Keep mix creation prominent and unique
+      - name: Keep mix creation in feeding page
         run: |
           node - <<'JS'
           const fs=require('fs');
@@ -92,19 +93,21 @@ jobs:
             try{
               const p=ev('state.plans.find(p=>p.status!=="closed"&&!p.archived)');
               assert(p,'active plan missing');
-              const host=w.document.createElement('div');
-              host.innerHTML=w.feedsTab(p);
-              w.document.body.appendChild(host);
-              const actions=[...host.querySelectorAll('.feed-actions-v16 .feed-action-v16')];
-              assert(actions.length===3,'top feed action bar must contain exactly three actions');
-              const featured=host.querySelector('.feed-action-v16.featured');
-              assert(featured&&featured.textContent.includes('إنشاء خلطة جديدة'),'prominent create-mix action missing');
-              const oldMix=host.querySelector('.feed-guide-v10 .section-title button[onclick^="openMixBuilderV10"]');
-              if(oldMix)assert(w.getComputedStyle(oldMix).display==='none','old create-mix button is still visible');
-              w.openMixFromFeedActionsV16(p.id);
-              assert(w.document.getElementById('mixBuilderV11'),'top create-mix action did not open flexible mix builder');
+
+              const prices=w.document.createElement('div');
+              prices.innerHTML=w.feedsTab(p);
+              assert(!prices.querySelector('.feed-actions-v16'),'mix action bar must not appear in feeds/prices page');
+
+              const feeding=w.document.createElement('div');
+              feeding.innerHTML=w.feedingTab(p);
+              const mixBtn=[...feeding.querySelectorAll('button')].find(b=>b.textContent.includes('إنشاء خلطة خاصة'));
+              assert(mixBtn,'create mix action missing from feeding page');
+              const stockBtn=[...feeding.querySelectorAll('button')].find(b=>b.textContent.includes('المخزون والأسعار'));
+              assert(stockBtn,'stock/prices secondary action missing beside mix creation');
+              w.openMixFromFeedingV17(p.id);
+              assert(w.document.getElementById('mixBuilderV11'),'feeding-page create-mix action did not open flexible mix builder');
               if(errors.length)throw new Error(errors.join('\n'));
-              console.log('Prominent feed actions regression test passed');
+              console.log('Feeding page mix placement regression test passed');
             }catch(e){console.error(e.stack||e);process.exit(1)}
           },250);
           JS
