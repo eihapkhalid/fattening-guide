@@ -1,0 +1,92 @@
+name: Deploy animal recovery v12
+
+on:
+  workflow_run:
+    workflows: ["Deploy flexible mix and status v11"]
+    types: [completed]
+
+permissions:
+  contents: write
+
+jobs:
+  deploy-v12:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.actor.login != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout latest master
+        uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Apply one-step recovery flow
+        run: python .deploy/apply-animal-status-recovery-v12.py index.html
+
+      - name: Verify v12 and JavaScript syntax
+        run: |
+          grep -q "ANIMAL_STATUS_RECOVERY_V12" index.html
+          grep -q "أؤكد أن الحيوان تعافى" index.html
+          grep -q "saveAnimalStatusV12" index.html
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          blocks=re.findall(r'<script[^>]*>(.*?)</script>',s,re.S)
+          assert blocks
+          Path('/tmp/fattening-v12.js').write_text('\n'.join(blocks),encoding='utf-8')
+          PY
+          node --check /tmp/fattening-v12.js
+
+      - name: Runtime recovery smoke test
+        run: |
+          npm install jsdom@24 --no-save --silent
+          node - <<'JS'
+          const fs=require('fs');
+          const {JSDOM,VirtualConsole}=require('jsdom');
+          const html=fs.readFileSync('index.html','utf8');
+          const errors=[];
+          const vc=new VirtualConsole();
+          vc.on('jsdomError',e=>errors.push('JSDOM: '+e.message));
+          vc.on('error',e=>errors.push('console.error: '+e));
+          const dom=new JSDOM(html,{runScripts:'dangerously',url:'https://fattening.test/',pretendToBeVisual:true,virtualConsole:vc,beforeParse(w){w.confirm=()=>true;w.alert=()=>{};w.HTMLElement.prototype.scrollIntoView=function(){}}});
+          const w=dom.window;
+          w.addEventListener('error',e=>errors.push('window error: '+(e.error?.stack||e.message)));
+          const ev=code=>w.eval(code);
+          const assert=(ok,msg)=>{if(!ok)throw new Error(msg)};
+          setTimeout(()=>{
+            try{
+              const p=ev('state.currentPlanId=state.plans[0].id; state.currentPage="plan"; plan()');
+              assert(p,'no plan');
+              const aid='v12_'+Date.now();
+              ev(`state.animals.push({id:${JSON.stringify('PLACEHOLDER')},planId:plan().id,groupId:plan().groups?.[0]?.id||'',animalType:'calf',tag:'V12-TEST',buyDate:today(),buyPlace:'اختبار',buyWeight:200,buyPrice:0,breed:'',sex:'ذكر',status:'treatment',selection:{result:'suitable'},health:{arrivalCompleted:true},weights:[{date:today(),value:200}],notes:[]})`.replace('PLACEHOLDER',aid));
+              ev(`state.emergencies.push({id:'em_v12',planId:plan().id,animalId:${JSON.stringify(aid)},date:today(),type:'bloat',status:'open',note:'اختبار'});state.treatments.push({id:'tx_v12',planId:plan().id,animalIds:[${JSON.stringify(aid)}],name:'علاج اختبار',status:'active',start:today(),days:1})`);
+              w.openAnimalStatusV11(aid);
+              const form=w.document.querySelector('#modal form');
+              assert(form,'status form missing');
+              const normal=form.querySelector('input[value="normal"]');normal.checked=true;w.statusChoiceChangedV12(form,aid);
+              assert(form.querySelector('[data-recovery-v12]').classList.contains('show'),'recovery confirmation not shown');
+              form.elements.reason.value='عاد الحيوان إلى حالته الطبيعية';
+              const beforeStatus=ev(`state.animals.find(a=>a.id===${JSON.stringify(aid)}).status`);
+              w.saveAnimalStatusV12({preventDefault(){},target:form},aid);
+              assert(ev(`state.animals.find(a=>a.id===${JSON.stringify(aid)}).status`)===beforeStatus,'status changed without recovery confirmation');
+              const form2=w.document.querySelector('#modal form');
+              form2.querySelector('input[value="normal"]').checked=true;w.statusChoiceChangedV12(form2,aid);form2.elements.closeCareConfirm.checked=true;form2.elements.reason.value='عاد الحيوان إلى حالته الطبيعية';
+              w.saveAnimalStatusV12({preventDefault(){},target:form2},aid);
+              assert(ev(`state.animals.find(a=>a.id===${JSON.stringify(aid)}).status`)==='normal','confirmed recovery did not set normal');
+              assert(ev(`state.emergencies.find(e=>e.id==='em_v12').status`)==='resolved','emergency not closed');
+              assert(ev(`state.treatments.find(t=>t.id==='tx_v12').status`)==='completed','treatment not completed');
+              assert(ev(`state.animalStatusEvents.some(e=>e.animalId===${JSON.stringify(aid)}&&e.to==='normal')`),'normal status transition not logged');
+              if(errors.length)throw new Error(errors.join('\n---\n'));
+              console.log('Animal recovery v12 smoke test passed');
+            }catch(e){errors.push(e.stack||String(e));}
+            if(errors.length){console.error(errors.join('\n---\n'));process.exit(1)}
+          },250);
+          JS
+
+      - name: Commit v12 site
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Simplify recovery to normal animal status"
+          git push
