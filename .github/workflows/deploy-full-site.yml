@@ -25,7 +25,10 @@ jobs:
       - name: Apply per-animal journey timeline
         run: python .deploy/apply-animal-journey-v5.py index.html
 
-      - name: Verify core features and JavaScript syntax
+      - name: Apply professional Arabic copy
+        run: python .deploy/apply-professional-copy-v6.py index.html
+
+      - name: Verify core features, copy and JavaScript syntax
         run: |
           grep -q "purchaseCheckNames" index.html
           grep -q "shelterCheckNames" index.html
@@ -35,6 +38,7 @@ jobs:
           grep -q "FEED_CURRENCY_CARDS_V3" index.html
           grep -q "USABILITY_V4_HERD_TIMELINE_FEEDING" index.html
           grep -q "ANIMAL_JOURNEY_V5" index.html
+          grep -q "PROFESSIONAL_COPY_V6" index.html
           grep -q "سجل القطيع" index.html
           grep -q "رحلة الحيوان" index.html
           grep -q "animalEventsV5" index.html
@@ -42,13 +46,15 @@ jobs:
           grep -q "quickCleanShelter" index.html
           grep -q "createFeedingLogV4" index.html
           grep -q "animalEntries" index.html
-          grep -q "خلطة المحاضرة — يخصم المكونات تلقائيًا" index.html
+          grep -q "الخلطة القياسية — خصم المكونات تلقائيًا" index.html
           grep -q "لا يوجد رقم تدرج موثق لهذا الوزن" index.html
           grep -q "وقت غير مسجل" index.html
           grep -q "window.ezNext=function ezNext" index.html
           grep -q "window.ezDay=function ezDay" index.html
           grep -q "window.ezPhase=function ezPhase" index.html
           ! grep -q "includes(state.planTab)?'overview'" index.html
+          ! grep -q "المحاضرة" index.html
+          ! grep -q "الدكتورة" index.html
           python - <<'PY'
           from pathlib import Path
           import re
@@ -79,6 +85,8 @@ jobs:
             try{
               ev('state.currentPage="dashboard"; render()');
               assert(w.document.body.textContent.includes('الرئيسية'),'dashboard failed');
+              assert(!w.document.body.textContent.includes('المحاضرة'),'training wording visible on dashboard');
+              assert(!w.document.body.textContent.includes('الدكتورة'),'person-source wording visible on dashboard');
               ev('state.currentPage="plans"; render()');
               assert(w.document.body.textContent.includes('خططي'),'plans failed');
               const p=ev('state.currentPlanId=state.plans[0].id; state.currentPage="plan"; plan()');
@@ -88,6 +96,8 @@ jobs:
               for(const t of tabs){
                 ev(`state.planTab=${JSON.stringify(t)}; render()`);
                 assert(w.document.querySelector('.content'),'render failed for '+t);
+                assert(!w.document.body.textContent.includes('المحاضرة'),'training wording visible in '+t);
+                assert(!w.document.body.textContent.includes('الدكتورة'),'person-source wording visible in '+t);
               }
 
               ev('state.planTab="timeline"; render()');
@@ -104,6 +114,8 @@ jobs:
 
               ev('state.planTab="feeding"; render(); openFeedingLogModal(plan().id)');
               assert(w.document.getElementById('feedingV4Form'),'feeding v4 modal failed');
+              assert(!w.document.body.textContent.includes('المحاضرة'),'training wording visible in feeding modal');
+              assert(!w.document.body.textContent.includes('الدكتورة'),'person-source wording visible in feeding modal');
               const form=w.document.getElementById('feedingV4Form');
               form.querySelectorAll('input[name^="conc_"]').forEach(x=>x.value='0.1');
               form.querySelectorAll('input[name^="rough_"]').forEach(x=>x.value='0.15');
@@ -121,6 +133,8 @@ jobs:
               ev(`openAnimal(${JSON.stringify(aid)})`);
               assert(w.document.body.textContent.includes('رحلة الحيوان'),'animal journey heading missing');
               assert(w.document.querySelector('.v5-animal-day'),'animal date grouping missing');
+              assert(!w.document.body.textContent.includes('المحاضرة'),'training wording visible in animal file');
+              assert(!w.document.body.textContent.includes('الدكتورة'),'person-source wording visible in animal file');
               const animalEvents=ev(`animalEventsV5(state.animals.find(a=>a.id===${JSON.stringify(aid)}))`);
               assert(animalEvents.some(x=>x.type==='animal'),'animal admission event missing');
               assert(animalEvents.some(x=>x.type==='feed'),'animal feeding event missing');
@@ -138,17 +152,17 @@ jobs:
               }
 
               assert(!errors.length,'runtime errors detected');
-              console.log('Runtime herd and animal journey smoke test passed');
+              console.log('Professional copy and runtime smoke test passed');
             }catch(e){errors.push(e.stack||String(e));}
             if(errors.length){console.error(errors.join('\n---\n'));process.exit(1)}
           },120);
           JS
 
-      - name: Commit simplified site
+      - name: Commit professional site copy
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Add complete per-animal journey timeline"
+          git commit -m "Refine professional Arabic copy across the site"
           git push
