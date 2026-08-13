@@ -1,0 +1,49 @@
+<style>
+/* ANIMAL_STATUS_RECOVERY_V12 */
+.v12-recovery-box{display:none;border:1px solid #c9ddd3;background:#f3f9f6;border-radius:12px;padding:12px;margin:12px 0}.v12-recovery-box.show{display:block}.v12-recovery-box strong{display:block;font-size:13px;margin-bottom:5px}.v12-recovery-box small{display:block;color:var(--muted);line-height:1.65}.v12-recovery-confirm{display:flex;gap:8px;align-items:flex-start;margin-top:10px;border-top:1px solid #d8e8df;padding-top:10px;font-size:12px}.v12-recovery-confirm input{margin-top:3px}
+</style>
+<script>
+/* ANIMAL_STATUS_RECOVERY_V12 */
+(()=>{
+  if(typeof state==='undefined')return;
+  const esc12=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const now12=()=>new Date().toISOString();
+  const statusText12=s=>s==='quarantine'?'عزل / فصل':s==='treatment'?'تحت العلاج':s==='observation'?'تحت المراقبة':s==='sold'?'مباع':'طبيعي';
+  const activeTreatments12=aid=>(state.treatments||[]).filter(t=>(t.animalIds||[]).includes(aid)&&t.status==='active');
+  const openEmergencies12=aid=>(state.emergencies||[]).filter(e=>e.animalId===aid&&e.status!=='resolved');
+  const recordStatus12=(a,from,to,reason,source)=>{state.animalStatusEvents=state.animalStatusEvents||[];if(!a||from===to)return;state.animalStatusEvents.push({id:uid('ase'),planId:a.planId,animalId:a.id,date:today(),createdAt:now12(),from,to,reason:reason||'',source:source||'manual'})};
+
+  window.statusChoiceChangedV12=function(form,aid){
+    const box=form?.querySelector('[data-recovery-v12]'),to=form?.elements.status?.value;
+    if(!box)return;
+    box.classList.toggle('show',to==='normal'&&box.dataset.hasCare==='1');
+    const cb=form.elements.closeCareConfirm;if(cb&&to!=='normal')cb.checked=false;
+  };
+
+  window.openAnimalStatusV11=function(aid){
+    const a=state.animals.find(x=>x.id===aid);if(!a)return;
+    if(a.status==='sold'){warningV9('الحيوان مباع؛ حالته تُدار من سجل البيع.');return}
+    const activeT=activeTreatments12(aid),openE=openEmergencies12(aid),hasCare=activeT.length||openE.length;
+    const careText=[openE.length?`${openE.length} حالة طارئة مفتوحة`:'',activeT.length?`${activeT.length} علاج نشط`:''].filter(Boolean).join(' و ');
+    modal(`<div class="modal-head"><div><h3>تحديث حالة الحيوان #${esc12(a.tag)}</h3><div class="small muted">اختر الحالة الحالية للحيوان. كل تغيير يُحفظ في سجل الرحلة.</div></div><button class="close" onclick="closeModal()">×</button></div>${hasCare?`<div class="alert"><span class="dot"></span><div><strong>توجد متابعة صحية لم تُغلق بعد</strong><small>${careText}. إذا كان الحيوان قد تعافى فعلًا، يمكنك إنهاء هذه المتابعات والتحويل إلى «طبيعي» من نفس الخطوة.</small></div></div>`:''}<form onsubmit="saveAnimalStatusV12(event,'${aid}')" onchange="statusChoiceChangedV12(this,'${aid}')"><div class="v11-status-options"><label class="v11-status-option"><input type="radio" name="status" value="normal" ${a.status==='normal'?'checked':''}><span><strong>طبيعي</strong><small>عاد للأكل والحركة والحالة المعتادة</small></span></label><label class="v11-status-option"><input type="radio" name="status" value="observation" ${a.status==='observation'?'checked':''}><span><strong>تحت المراقبة</strong><small>انتهى التدخل لكن ما زلت تتابعه</small></span></label><label class="v11-status-option"><input type="radio" name="status" value="treatment" ${a.status==='treatment'?'checked':''}><span><strong>تحت العلاج</strong><small>لديه علاج أو تدخل صحي جارٍ</small></span></label><label class="v11-status-option"><input type="radio" name="status" value="quarantine" ${a.status==='quarantine'?'checked':''}><span><strong>عزل / فصل</strong><small>مفصول عن بقية القطيع للمتابعة</small></span></label></div>${hasCare?`<div class="v12-recovery-box ${a.status==='normal'?'show':''}" data-recovery-v12 data-has-care="1"><strong>التحويل إلى طبيعي سيُنهي المتابعات المفتوحة</strong><small>${careText}. لن تُحذف أي بيانات؛ ستتحول الحالات إلى «مغلقة/مكتملة» وتبقى ظاهرة في رحلة الحيوان.</small><label class="v12-recovery-confirm"><input type="checkbox" name="closeCareConfirm"><span>أؤكد أن الحيوان تعافى، وأن هذه المتابعات انتهت، وأريد تحويل حالته إلى «طبيعي».</span></label></div>`:'<div data-recovery-v12 data-has-care="0"></div>'}<div class="field"><label>ملاحظة مختصرة عن سبب التغيير — اختيارية</label><input name="reason" placeholder="مثال: عاد للأكل والحركة بصورة طبيعية"></div><div class="modal-actions"><button type="button" class="btn" onclick="closeModal()">إلغاء</button><button class="btn primary">حفظ الحالة</button></div></form>`);
+    const form=document.querySelector('#modal form');statusChoiceChangedV12(form,aid);
+  };
+
+  window.saveAnimalStatusV12=function(ev,aid){
+    ev.preventDefault();
+    const form=ev.target,f=new FormData(form),a=state.animals.find(x=>x.id===aid),to=f.get('status');
+    if(!a||!to)return;
+    const activeT=activeTreatments12(aid),openE=openEmergencies12(aid),hasCare=activeT.length||openE.length;
+    if(to==='normal'&&hasCare){
+      if(!f.get('closeCareConfirm')){warningV9('إذا كان الحيوان قد تعافى، فعّل تأكيد إنهاء المتابعات المفتوحة ثم احفظ الحالة.');return}
+      const stamp=now12();
+      openE.forEach(e=>{e.status='resolved';e.resolvedAt=today();e.resolvedAtIso=stamp;e.resolutionReason=f.get('reason')||'تم تأكيد تعافي الحيوان أثناء تحديث حالته'});
+      activeT.forEach(t=>{t.status='completed';t.completedAt=today();t.completedAtIso=stamp;t.completionReason=f.get('reason')||'تم تأكيد انتهاء العلاج أثناء تحديث حالة الحيوان'});
+    }
+    if(a.status===to){save();closeModal();render();if(hasCare&&to==='normal')successV9('تم إنهاء المتابعات المفتوحة وتأكيد أن حالة الحيوان طبيعية.');return}
+    const from=a.status||'normal';a.status=to;recordStatus12(a,from,to,f.get('reason')||(to==='normal'&&hasCare?'تم تأكيد التعافي وإنهاء المتابعات المفتوحة':''),'manual_recovery');
+    save();closeModal();render();successV9(to==='normal'&&hasCare?`تم إنهاء المتابعات المفتوحة وتحويل الحيوان #${a.tag} إلى «طبيعي».`:`تم تحديث حالة الحيوان #${a.tag} إلى «${statusText12(to)}».`);
+  };
+  window.saveAnimalStatusV11=window.saveAnimalStatusV12;
+})();
+</script>
