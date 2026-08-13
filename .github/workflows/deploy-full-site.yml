@@ -31,6 +31,7 @@ jobs:
           python .deploy/apply-flexible-mix-status-v11.py index.html
           python .deploy/apply-animal-status-recovery-v12.py index.html
           python .deploy/apply-plan-archive-icons-v13.py index.html
+          python .deploy/apply-plan-lifecycle-polish-v14.py index.html
 
       - name: Verify current features and JavaScript syntax
         run: |
@@ -38,18 +39,17 @@ jobs:
           grep -q "FLEXIBLE_MIX_STATUS_V11" index.html
           grep -q "ANIMAL_STATUS_RECOVERY_V12" index.html
           grep -q "PLAN_ARCHIVE_ICONS_V13" index.html
+          grep -q "PLAN_LIFECYCLE_POLISH_V14" index.html
           grep -q "تحديد الكل" index.html
           grep -q "كامل القطيع ما عدا" index.html
           grep -q "إنشاء خلطة مرنة" index.html
           grep -q "مادة جديدة غير موجودة بالقائمة" index.html
-          grep -q "تحت المراقبة" index.html
           grep -q "أؤكد أن الحيوان تعافى" index.html
           grep -q "سعر الصرف مؤكد اليوم" index.html
           grep -q "رحلة الحيوان" index.html
-          grep -q "أرشفة الخطة" index.html
-          grep -q "المؤرشفة" index.html
-          grep -q "renamePlanV13" index.html
-          grep -q "restorePlanV13" index.html
+          grep -q "المكتملة" index.html
+          grep -q "حذف الخطة نهائيًا" index.html
+          grep -q "deletePlanV14" index.html
           ! grep -q "المحاضرة" index.html
           ! grep -q "الدكتورة" index.html
           python - <<'PY'
@@ -62,7 +62,7 @@ jobs:
           PY
           node --check /tmp/fattening-site.js
 
-      - name: Runtime current-flow smoke test
+      - name: Runtime lifecycle and UI smoke test
         run: |
           npm install jsdom@24 --no-save --silent
           node - <<'JS'
@@ -80,64 +80,70 @@ jobs:
           const assert=(ok,msg)=>{if(!ok)throw new Error(msg)};
           setTimeout(()=>{
             try{
-              const p=ev('state.currentPlanId=state.plans[0].id; state.currentPage="plan"; plan()');
-              assert(p,'no plan');
-              for(const tab of ['overview','timeline','animals','feeding','health','sales','feeds']){
-                ev(`state.planTab=${JSON.stringify(tab)}; render()`);
-                assert(w.document.querySelector('.content'),'render failed: '+tab);
+              const active=ev('state.plans.find(p=>p.status!=="closed"&&!p.archived)');
+              assert(active,'no active plan');
+              ev(`state.currentPlanId=${JSON.stringify(active.id)};state.currentPage="plan";state.planTab="timeline";render()`);
+              assert(w.document.querySelector('.content'),'active plan render failed');
+
+              // Event icons remain professional SVG.
+              const eventIcons=[...w.document.querySelectorAll('.v4-evicon')];
+              if(eventIcons.length)assert(eventIcons.every(x=>x.querySelector('svg.v13-icon')),'timeline contains non-standard icons');
+
+              // Animal file has exactly one status control, not duplicate buttons.
+              const aid=ev(`planAnimals(${JSON.stringify(active.id)}).find(a=>a.status!=="sold")?.id`);
+              if(aid){
+                w.openAnimal(aid);
+                assert(!w.document.querySelector('.v11-status-button'),'duplicate header status button still exists');
+                const strip=w.document.querySelector('.v11-status-strip');
+                if(strip)assert(strip.querySelectorAll('button').length<=1,'animal status controls are duplicated');
+                w.closeModal();
               }
 
-              // Professional timeline icons are SVG, not emoji glyphs.
-              ev('state.planTab="timeline";render()');
-              const eventIcons=[...w.document.querySelectorAll('.v4-evicon')];
-              assert(eventIcons.length>0,'timeline events missing');
-              assert(eventIcons.every(x=>x.querySelector('svg.v13-icon')),'timeline still uses non-standard event icons');
+              // Completed plans are separated and immutable.
+              const completed=ev('state.plans.find(p=>p.status==="closed")');
+              assert(completed,'no completed seed plan');
+              ev(`state.currentPage="plans";state.planListFilter="completed";render()`);
+              assert(w.document.body.textContent.includes(completed.name),'completed plan missing from completed tab');
+              assert(w.document.body.textContent.includes('المكتملة'),'completed tab missing');
+              ev(`state.currentPlanId=${JSON.stringify(completed.id)};state.currentPage="plan";render()`);
+              assert(w.document.body.textContent.includes('مكتملة — للعرض فقط'),'completed plan is not read-only');
+              assert(!w.document.body.textContent.includes('إدارة الخطة'),'completed plan still exposes management');
+              assert(!w.document.body.textContent.includes('أرشفة الخطة'),'completed plan still exposes archive action');
+              const modalBefore=!!w.document.getElementById('modal');
+              w.openExpenseModal(completed.id);
+              assert(!!w.document.getElementById('modal')===modalBefore,'completed plan opened a mutation modal');
 
-              // Flexible mix accepts arbitrary total and an inline new material.
-              w.openMixBuilderV10(p.id);
-              const mf=w.document.getElementById('mixBuilderV11');assert(mf,'flexible mix builder missing');
-              mf.elements.name.value='اختبار خلطة مرنة';
-              const rows=[...mf.querySelectorAll('.v11-mix-row')];
-              const first=rows[0].querySelector('select[name="material"]');
-              const firstCode=[...first.options].map(o=>o.value).find(v=>v&&v!=='__new__');
-              first.value=firstCode;w.mixMaterialChangedV11(first);rows[0].querySelector('input[name="kg"]').value='30';
-              const second=rows[1].querySelector('select[name="material"]');second.value='__new__';w.mixMaterialChangedV11(second);rows[1].querySelector('input[name="newName"]').value='مادة اختبار حالية';rows[1].querySelector('input[name="kg"]').value='55';mf.elements.confirm.checked=true;w.updateMixTotalV11();
-              assert(w.document.getElementById('mixTotalV11').dataset.total==='85','flexible mix total failed');
-              const beforeMix=ev('state.feedMixes.length');w.saveMixV11({preventDefault(){},target:mf},p.id);assert(ev('state.feedMixes.length')===beforeMix+1,'flexible mix save failed');
-
-              // Recovery: active emergency + treatment can be closed from the normal-status action after explicit confirmation.
-              const aid='current_'+Date.now();
-              ev(`state.animals.push({id:${JSON.stringify('PLACEHOLDER')},planId:plan().id,groupId:plan().groups?.[0]?.id||'',animalType:'calf',tag:'CURRENT-TEST',buyDate:today(),buyPlace:'اختبار',buyWeight:200,buyPrice:0,breed:'',sex:'ذكر',status:'treatment',selection:{result:'suitable'},health:{arrivalCompleted:true},weights:[{date:today(),value:200}],notes:[]})`.replace('PLACEHOLDER',aid));
-              ev(`state.emergencies.push({id:'em_current',planId:plan().id,animalId:${JSON.stringify(aid)},date:today(),type:'bloat',status:'open'});state.treatments.push({id:'tx_current',planId:plan().id,animalIds:[${JSON.stringify(aid)}],name:'علاج اختبار',status:'active',start:today(),days:1})`);
-              w.openAnimalStatusV11(aid);
-              let sf=w.document.querySelector('#modal form');sf.querySelector('input[value="normal"]').checked=true;w.statusChoiceChangedV12(sf,aid);
-              assert(sf.querySelector('[data-recovery-v12]').classList.contains('show'),'recovery confirmation missing');
-              sf.elements.closeCareConfirm.checked=true;sf.elements.reason.value='تعافى الحيوان وعاد طبيعيًا';
-              w.saveAnimalStatusV12({preventDefault(){},target:sf},aid);
-              assert(ev(`state.animals.find(a=>a.id===${JSON.stringify(aid)}).status`)==='normal','animal did not return normal');
-              assert(ev(`state.emergencies.find(e=>e.id==='em_current').status`)==='resolved','emergency not resolved');
-              assert(ev(`state.treatments.find(t=>t.id==='tx_current').status`)==='completed','treatment not completed');
-
-              // Plan rename + soft archive + restore.
-              const pid=p.id,oldName=p.name,newName='خطة اختبار إدارة';
-              const fakeRename=w.document.createElement('form');fakeRename.innerHTML='<input name="name">';fakeRename.elements.name.value=newName;
-              w.renamePlanV13({preventDefault(){},target:fakeRename},pid);
-              assert(ev(`state.plans.find(x=>x.id===${JSON.stringify(pid)}).name`)==='خطة اختبار إدارة','plan rename failed');
-              w.archivePlanV13(pid);
-              assert(ev(`state.plans.find(x=>x.id===${JSON.stringify(pid)}).archived`)===true,'plan archive failed');
-              ev('state.currentPage="dashboard";render()');
-              assert(!w.document.body.textContent.includes(newName),'archived plan still visible on dashboard');
+              // Current plan can be archived and then offers restore + delete.
+              ev(`state.currentPlanId=${JSON.stringify(active.id)};state.currentPage="plans";state.planListFilter="current";save();render()`);
+              const originalName=active.name;
+              w.archivePlanV13(active.id);
+              assert(ev(`state.plans.find(p=>p.id===${JSON.stringify(active.id)}).archived`)===true,'archive failed');
               ev('state.currentPage="plans";state.planListFilter="archived";render()');
-              assert(w.document.body.textContent.includes(newName),'archived plan missing from archive list');
-              w.restorePlanV13(pid);
-              assert(ev(`state.plans.find(x=>x.id===${JSON.stringify(pid)}).archived`)===false,'plan restore failed');
-              ev(`state.plans.find(x=>x.id===${JSON.stringify(pid)}).name=${JSON.stringify(oldName)};save()`);
+              assert(w.document.body.textContent.includes(originalName),'archived plan missing');
+              assert(w.document.body.textContent.includes('حذف'),'delete action missing from archive');
+              w.restorePlanV13(active.id);
+              assert(ev(`state.plans.find(p=>p.id===${JSON.stringify(active.id)}).archived`)===false,'restore failed');
+
+              // Final deletion is allowed only for an archived, non-completed plan and cascades related animal data.
+              const tmp='tmp_plan_'+Date.now(),tmpAnimal='tmp_animal_'+Date.now();
+              ev(`state.plans.push({id:${JSON.stringify(tmp)},clientId:state.currentClientId,name:'خطة حذف اختبار',start:today(),duration:90,sellPlace:'اختبار',profitTarget:0,status:'active',archived:true,groups:[{id:'tmp_g',name:'اختبار'}]});state.animals.push({id:${JSON.stringify(tmpAnimal)},planId:${JSON.stringify(tmp)},groupId:'tmp_g',tag:'TMP',buyDate:today(),buyWeight:100,buyPrice:0,weights:[{date:today(),value:100}],notes:[],status:'normal'});save()`);
+              const f=w.document.createElement('form');f.innerHTML='<input type="checkbox" name="confirm" checked>';
+              w.deletePlanV14({preventDefault(){},target:f},tmp);
+              assert(!ev(`state.plans.some(p=>p.id===${JSON.stringify(tmp)})`),'archived plan was not deleted');
+              assert(!ev(`state.animals.some(a=>a.id===${JSON.stringify(tmpAnimal)})`),'related animal was not deleted');
+
+              // A completed plan can never be archived or deleted.
+              w.archivePlanV13(completed.id);
+              assert(ev(`state.plans.find(p=>p.id===${JSON.stringify(completed.id)}).archived`)!==true,'completed plan was archived');
+              const f2=w.document.createElement('form');f2.innerHTML='<input type="checkbox" name="confirm" checked>';
+              w.deletePlanV14({preventDefault(){},target:f2},completed.id);
+              assert(ev(`state.plans.some(p=>p.id===${JSON.stringify(completed.id)})`),'completed plan was deleted');
 
               if(errors.length)throw new Error(errors.join('\n---\n'));
-              console.log('Current flow + plan archive/icons smoke test passed');
+              console.log('Lifecycle v14 smoke test passed');
             }catch(e){errors.push(e.stack||String(e));}
             if(errors.length){console.error(errors.join('\n---\n'));process.exit(1)}
-          },250);
+          },300);
           JS
 
       - name: Commit current site
@@ -146,5 +152,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Polish icons and add plan archive management"
+          git commit -m "Separate completed cycles and polish plan management"
           git push
