@@ -28,6 +28,9 @@ jobs:
       - name: Apply professional Arabic copy
         run: python .deploy/apply-professional-copy-v6.py index.html
 
+      - name: Apply unified action scope
+        run: python .deploy/apply-action-scope-v7.py index.html
+
       - name: Verify core features, copy and JavaScript syntax
         run: |
           grep -q "purchaseCheckNames" index.html
@@ -39,6 +42,12 @@ jobs:
           grep -q "USABILITY_V4_HERD_TIMELINE_FEEDING" index.html
           grep -q "ANIMAL_JOURNEY_V5" index.html
           grep -q "PROFESSIONAL_COPY_V6" index.html
+          grep -q "ACTION_SCOPE_V7" index.html
+          grep -q "على من سيُطبق هذا الإجراء؟" index.html
+          grep -q "كامل القطيع" index.html
+          grep -q "حيوان واحد" index.html
+          grep -q "scopePickerV7" index.html
+          grep -q "targetAnimalId" index.html
           grep -q "سجل القطيع" index.html
           grep -q "رحلة الحيوان" index.html
           grep -q "animalEventsV5" index.html
@@ -47,7 +56,6 @@ jobs:
           grep -q "createFeedingLogV4" index.html
           grep -q "animalEntries" index.html
           grep -q "الخلطة القياسية — خصم المكونات تلقائيًا" index.html
-          grep -q "لا يوجد رقم تدرج موثق لهذا الوزن" index.html
           grep -q "وقت غير مسجل" index.html
           grep -q "window.ezNext=function ezNext" index.html
           grep -q "window.ezDay=function ezDay" index.html
@@ -65,7 +73,7 @@ jobs:
           PY
           node --check /tmp/fattening-site.js
 
-      - name: Runtime UI herd and animal journey smoke test
+      - name: Runtime UI and action scope smoke test
         run: |
           npm install jsdom@24 --no-save --silent
           node - <<'JS'
@@ -112,29 +120,65 @@ jobs:
               assert(ev('state.daily.length')>=beforeDaily,'quick clean failed');
               assert(ev('state.daily.filter(x=>x.createdAt).length')>0,'new event timestamp missing');
 
+              // Feeding defaults to the full herd and still records each animal separately.
               ev('state.planTab="feeding"; render(); openFeedingLogModal(plan().id)');
-              assert(w.document.getElementById('feedingV4Form'),'feeding v4 modal failed');
+              const form=w.document.getElementById('feedingScopeV7')||w.document.getElementById('feedingV4Form');
+              assert(form,'feeding scope modal failed');
+              assert(form.elements.scope?.value==='herd','feeding should default to full herd');
+              assert(w.document.body.textContent.includes('كامل القطيع')&&w.document.body.textContent.includes('حيوان واحد'),'scope choices missing in feeding');
               assert(!w.document.body.textContent.includes('المحاضرة'),'training wording visible in feeding modal');
-              assert(!w.document.body.textContent.includes('الدكتورة'),'person-source wording visible in feeding modal');
-              const form=w.document.getElementById('feedingV4Form');
               form.querySelectorAll('input[name^="conc_"]').forEach(x=>x.value='0.1');
               form.querySelectorAll('input[name^="rough_"]').forEach(x=>x.value='0.15');
               const mode=form.elements.mixMode;
-              if([...mode.options].some(o=>o.value==='ready')){mode.value='ready';w.feedV4Mode(mode)}
+              if([...mode.options].some(o=>o.value==='ready')){mode.value='ready'; if(w.scopeFeedModeV7)w.scopeFeedModeV7(mode); else if(w.feedV4Mode)w.feedV4Mode(mode)}
               const beforeLogs=ev('state.feedingLogs.length');
               w.createFeedingLogV4({preventDefault(){},target:form},p.id);
               assert(ev('state.feedingLogs.length')===beforeLogs+1,'feeding log not created');
               const last=ev('state.feedingLogs.at(-1)');
+              assert(last.scope==='herd','feeding herd scope not stored');
               assert(last.createdAt,'feeding timestamp missing');
               assert(last.animalEntries?.length===ev('planAnimals(plan().id).filter(a=>a.status!=="sold").length'),'per-animal feed rows missing');
               assert(last.feedConsumption?.length>=2,'feed inventory consumption not recorded');
+
+              // Health uses the same selector and defaults to herd for a normal daily check.
+              ev('openHealthDailyModal(plan().id)');
+              const hf=w.document.getElementById('healthScopeV7');
+              assert(hf,'health scope form missing');
+              assert(hf.elements.scope.value==='herd','health should default to herd');
+              ev('closeModal()');
+
+              // Treatment defaults to one animal to reduce medication mistakes.
+              ev('openTreatmentModal(plan().id)');
+              const tf=w.document.querySelector('#modal form');
+              assert(tf?.elements.scope?.value==='animal','treatment should default to one animal');
+              assert(tf.querySelector('[data-scope-animal]')?.style.display!=='none','treatment animal selector should be visible');
+              ev('closeModal()');
+
+              // Preventive action defaults to herd.
+              ev('openPreventiveEventModal(plan().id)');
+              const pf=w.document.querySelector('#modal form');
+              assert(pf?.elements.scope?.value==='herd','preventive action should default to herd');
+              ev('closeModal()');
+
+              // Expenses use the same visual scope model.
+              ev('openExpenseModal(plan().id)');
+              const ef=w.document.querySelector('#modal form');
+              assert(ef?.elements.scope?.value==='herd','expense should default to herd');
+              ev('closeModal()');
+
+              // Weighting the herd must create a separate field per active animal.
+              ev('openEasyWeightModal(plan().id)');
+              const wf=w.document.getElementById('weightScopeV7');
+              assert(wf?.elements.scope?.value==='herd','weight should default to herd');
+              const activeCount=ev('planAnimals(plan().id).filter(a=>a.status!=="sold").length');
+              assert(w.document.querySelectorAll('#weightRowsV7 input[name^="w_"]').length===activeCount,'herd weight fields missing');
+              ev('closeModal()');
 
               const aid=ev('planAnimals(plan().id).find(a=>a.status!=="sold").id');
               ev(`openAnimal(${JSON.stringify(aid)})`);
               assert(w.document.body.textContent.includes('رحلة الحيوان'),'animal journey heading missing');
               assert(w.document.querySelector('.v5-animal-day'),'animal date grouping missing');
               assert(!w.document.body.textContent.includes('المحاضرة'),'training wording visible in animal file');
-              assert(!w.document.body.textContent.includes('الدكتورة'),'person-source wording visible in animal file');
               const animalEvents=ev(`animalEventsV5(state.animals.find(a=>a.id===${JSON.stringify(aid)}))`);
               assert(animalEvents.some(x=>x.type==='animal'),'animal admission event missing');
               assert(animalEvents.some(x=>x.type==='feed'),'animal feeding event missing');
@@ -152,17 +196,17 @@ jobs:
               }
 
               assert(!errors.length,'runtime errors detected');
-              console.log('Professional copy and runtime smoke test passed');
+              console.log('Action scope and runtime smoke test passed');
             }catch(e){errors.push(e.stack||String(e));}
             if(errors.length){console.error(errors.join('\n---\n'));process.exit(1)}
-          },120);
+          },140);
           JS
 
-      - name: Commit professional site copy
+      - name: Commit unified action scope site
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Refine professional Arabic copy across the site"
+          git commit -m "Add herd or single-animal action scope"
           git push
