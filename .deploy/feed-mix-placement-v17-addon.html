@@ -1,0 +1,46 @@
+<style>
+/* FEED_MIX_PLACEMENT_V17 */
+.mix-actions-v17{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.mix-actions-v17 .btn.primary{box-shadow:0 6px 18px rgba(23,74,58,.12)}
+@media(max-width:720px){.mix-actions-v17{width:100%}.mix-actions-v17 .btn{flex:1 1 auto}}
+</style>
+<script>
+/* FEED_MIX_PLACEMENT_V17 */
+(()=>{
+  window.openMixFromFeedingV17=function(pid){
+    const fn=window.openMixBuilderV11||window.openMixBuilderV10;
+    if(typeof fn==='function')fn(pid);
+  };
+
+  if(typeof window.feedsTab==='function'){
+    const oldFeedsTab17=window.feedsTab;
+    window.feedsTab=function(p){
+      const tpl=document.createElement('template');
+      tpl.innerHTML=oldFeedsTab17(p);
+      tpl.content.querySelector('.feed-actions-v16')?.remove();
+      return tpl.innerHTML;
+    };
+  }
+
+  if(typeof window.feedingTab==='function'){
+    const oldFeedingTab17=window.feedingTab;
+    window.feedingTab=function(p){
+      const tpl=document.createElement('template');
+      tpl.innerHTML=oldFeedingTab17(p);
+      const headings=[...tpl.content.querySelectorAll('.section-title h3')];
+      const mixHeading=headings.find(x=>x.textContent.trim().startsWith('خلطة '));
+      const section=mixHeading?.closest('.section-title');
+      if(section&&!section.querySelector('.mix-actions-v17')){
+        [...section.querySelectorAll('button')].forEach(btn=>{
+          if((btn.textContent||'').trim()==='المخزون')btn.remove();
+        });
+        const actions=document.createElement('div');
+        actions.className='mix-actions-v17';
+        actions.innerHTML=`<button type="button" class="btn primary" onclick="openMixFromFeedingV17('${p.id}')">إنشاء خلطة خاصة</button><button type="button" class="btn" onclick="openFeedModal('${p.id}')">المخزون والأسعار</button>`;
+        section.appendChild(actions);
+      }
+      return tpl.innerHTML;
+    };
+  }
+})();
+</script>
